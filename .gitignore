@@ -1,0 +1,165 @@
+# ==========================================
+# ENVIRONMENT VARIABLES & SECRETS
+# ==========================================
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Certificates, keys, and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+credentials.json
+service-account*.json
+secrets/
+.secret/
+
+# ==========================================
+# PYTHON MICROSERVICE (FastAPI)
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.packages/
+packages/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
+pip-wheel-metadata/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.mypy_cache/
+.pyre/
+.ruff_cache/
+.dmypy.json
+.pytype/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python logs
+*.log
+
+# ==========================================
+# NODE.JS BACKEND (Express, Node.js)
+# ==========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Package manager caches
+.npm/
+.yarn/cache/
+.yarn/unplugged/
+.pnpm-store/
+
+# Runtime files
+pids/
+*.pid
+*.pid.lock/
+
+# Node diagnostic reports
+report.*.json
+*.heapsnapshot
+
+# ==========================================
+# NEXT.JS FRONTEND
+# ==========================================
+.next/
+out/
+build/
+next-env.d.ts
+
+# Next.js deployment
+.vercel/
+
+# TypeScript
+*.tsbuildinfo
+
+# ==========================================
+# GENERAL BUILD OUTPUTS
+# ==========================================
+dist/
+coverage/
+.cache/
+.tmp/
+temp/
+
+# ==========================================
+# LOGS
+# ==========================================
+logs/
+*.log
+
+# ==========================================
+# IDE & EDITOR
+# ==========================================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# ==========================================
+# OPERATING SYSTEM
+# ==========================================
+.DS_Store
+.DS_Store?
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ==========================================
+# LOCAL DATABASES & BACKUPS
+# ==========================================
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.bak
+*.backup
+
+# ==========================================
+# TEMPORARY FILES
+# ==========================================
+*.swp
+*.swo
+*.tmp
+*.temp
+*.orig
+*.rej
+
+# ==========================================
+# CLOUD & DEPLOYMENT LOCAL CONFIG
+# ==========================================
+.firebase/
+.gcloud/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
