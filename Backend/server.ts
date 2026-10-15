@@ -14,7 +14,7 @@ app.get("/",async () => {
 const start = async () => {
     try {
         await app.listen({
-            port : Number(process.env.port) || 8080,
+            port : Number(process.env.PORT ?? process.env.ZC_SLATE_PORT ?? 8080),
             host : "0.0.0.0"
         });
         
