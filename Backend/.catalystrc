@@ -22,13 +22,37 @@
           "idx": 1,
           "id": "60091789678",
           "name": "Development",
-          "type": 3
+          "type": 3,
+          "env_status": "Active",
+          "project_details": {
+            "project_name": "marketing-agency",
+            "id": "81904000000013050",
+            "project_type": "Live"
+          },
+          "is_default": false,
+          "action_required": false
         },
         {
           "idx": 2,
           "id": "50046903039",
           "name": "Production",
-          "type": 1
+          "type": 1,
+          "env_status": "Active",
+          "project_details": {
+            "project_name": "marketing-agency",
+            "id": "81904000000013050",
+            "project_type": "Live"
+          },
+          "is_default": true,
+          "clone_env_id": "60091789678",
+          "migrated_services": {
+            "migrated_services": [
+              "Settings",
+              "Zia"
+            ],
+            "is_catalyst_migrated": true
+          },
+          "action_required": false
         }
       ]
     }

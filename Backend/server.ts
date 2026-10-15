@@ -14,14 +14,15 @@ app.get("/",async () => {
 app.get("/health",async () => {
     return {
         success : true,
-        message : "Health is good"
+        message : "Health is good and fast which is my favourite"
     }
 })
 
 const start = async () => {
     try {
+        const port = Number(process.env.X_ZOHO_CATALYST_LISTEN_PORT || 9000);
         await app.listen({
-            port : Number(process.env.PORT ?? process.env.X_ZOHO_CATALYST_LISTEN_PORT ?? 8080),
+            port,
             host : "0.0.0.0"
         });
         
