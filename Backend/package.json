@@ -21,7 +21,8 @@
     "crawlee": "^3.18.2",
     "fastify": "^5.12.7",
     "ipaddr.js": "^2.5.0",
-    "mongodb": "^7.7.0"
+    "mongodb": "^7.7.0",
+    "tldts": "^7.4.19"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

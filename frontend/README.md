@@ -38,3 +38,5 @@ Set `ORBIT_BACKEND_URL` in Vercel to `https://market-agency-backend-50046841977.
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+The Competitor Search section requests direct Gemini suggestions, shows company names, links and descriptions, and opens linked Detailed Analysis reports. AI output is labelled as unverified. Requests continue through the same-origin /api/v1 proxy.

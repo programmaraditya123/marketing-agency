@@ -15,3 +15,5 @@ catalyst deploy --only appsail
 **Note:** Make sure you are in the backend project directory before running the command.
 
 CORS is always enabled with fixed origins `https://orbit.vidorahub.com` and `http://localhost:3000` in `config/cors.ts`. Environment variables cannot replace or disable this allowlist. Credentials are supported; authentication remains required. Catalyst gateway preflights also require the project Authorized Domains configuration.
+
+Competitor Search asks Gemini directly through the private Microservice suggestions endpoint. Backend validates and deduplicates the returned company URLs, stores AI-generated suggestions, and links detailed crawler reports. Browser dependencies were removed and AppSail memory is restored to 512 MB. No browser configuration is needed.

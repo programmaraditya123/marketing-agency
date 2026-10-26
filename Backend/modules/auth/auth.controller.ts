@@ -9,15 +9,15 @@ export function authControllers(auth: AuthService, env: Environment) {
     const result = await auth.authenticate(mode, request.body, request.identity);
     setSessionCookie(reply, jwt.issue(result.identity.sessionId), env);
     return reply.code(mode === "register" ? 201 : 200).send({ success: true, data: { user: result.user,
-      accessToken: jwt.issue(result.identity.sessionId, 900), expiresIn: 900 } });
+      visitorId: result.identity.visitorId, accessToken: jwt.issue(result.identity.sessionId, 900), expiresIn: 900 } });
   };
   return {
     register: authenticate("register"), login: authenticate("login"),
-    async me(request: FastifyRequest) { return { success: true, data: { user: await auth.me(request.identity) } }; },
+    async me(request: FastifyRequest) { return { success: true, data: { user: await auth.me(request.identity), visitorId: request.identity.visitorId } }; },
     async logout(request: FastifyRequest, reply: FastifyReply) {
       const next = await auth.logout(request.identity);
       setSessionCookie(reply, jwt.issue(next.sessionId), env);
-      return { success: true, data: { user: null } };
+      return { success: true, data: { user: null, visitorId: next.visitorId } };
     },
   };
 }

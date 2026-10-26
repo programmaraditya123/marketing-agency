@@ -4,9 +4,11 @@ import Icon from "./WorkspaceIcon";
 export const sections = [
   { label: "Brand Overview", icon: "overview", group: "YOUR RESEARCH" },
   { label: "Your Product", icon: "product" }, { label: "Target Audience", icon: "audience" }, { label: "Brand Voice", icon: "voice" },
-  { label: "Past Steps", icon: "past", group: "YOUR STRATEGY" }, { label: "Future Plans", icon: "future" },
-  { label: "Growth Ideas", icon: "growth" }, { label: "Content Themes", icon: "content" },
-  { label: "Website Analytics", icon: "analytics", group: "YOUR WORKSPACE" }, { label: "Research Sources", icon: "sources" },
+  { label: "Competitor Search", icon: "competitors" }, { label: "Market Demand", icon: "analytics" },
+  // { label: "Past Steps", icon: "past", group: "YOUR STRATEGY" }, { label: "Future Plans", icon: "future" },
+  { label: "Marketing Channels to use", icon: "growth" }, { label: "Growth Ideas", icon: "growth" },
+  //  { label: "Content Themes", icon: "content" },
+  // { label: "Website Analytics", icon: "analytics", group: "YOUR WORKSPACE" }, { label: "Research Sources", icon: "sources" },
   { label: "Search History", icon: "history" }, { label: "Your Activity", icon: "activity" },
 ];
 export default function WorkspaceSidebar({ active, onSelect }: { active: string; onSelect: (value: string) => void }) {

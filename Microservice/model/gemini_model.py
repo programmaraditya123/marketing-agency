@@ -1,7 +1,8 @@
 import json
 
 import httpx
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
+from typing import TypeVar
 
 from config.settings import Settings
 from model.gemini_errors import check_provider_response
@@ -12,9 +13,12 @@ from schemas.analysis_input import AnalysisInput
 from utils.exceptions import AnalysisError
 
 
-async def analyze_with_gemini(payload: AnalysisInput, client: httpx.AsyncClient, settings: Settings) -> Analysis:
+Output = TypeVar("Output", bound=BaseModel)
+
+
+async def generate_structured(payload: BaseModel, output: type[Output], prompt: str, client: httpx.AsyncClient, settings: Settings) -> Output:
     endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.gemini_model}:generateContent"
-    schema = generation_schema()
+    schema = generation_schema(output)
     if settings.gemini_model.startswith("gemini-2"):
         output_config = {"responseMimeType": "application/json", "responseJsonSchema": schema}
         thinking_config = {"thinkingBudget": 1024 if "pro" in settings.gemini_model else 0}
@@ -22,7 +26,7 @@ async def analyze_with_gemini(payload: AnalysisInput, client: httpx.AsyncClient,
         output_config = {"responseFormat": {"text": {"mimeType": "APPLICATION_JSON", "schema": schema}}}
         thinking_config = {"thinkingLevel": "LOW"}
     body = {
-        "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
+        "systemInstruction": {"parts": [{"text": prompt}]},
         "contents": [{"role": "user", "parts": [{"text": payload.model_dump_json()}]}],
         "generationConfig": {
             "maxOutputTokens": 8192,
@@ -43,10 +47,14 @@ async def analyze_with_gemini(payload: AnalysisInput, client: httpx.AsyncClient,
         if candidate.get("finishReason") != "STOP":
             raise AnalysisError("Gemini could not complete a safe, structured analysis.", 502, "GEMINI_BLOCKED")
         text = "".join(part.get("text", "") for part in candidate.get("content", {}).get("parts", []) if not part.get("thought"))
-        return Analysis.model_validate_json(text)
+        return output.model_validate_json(text)
     except httpx.TimeoutException as error:
         raise AnalysisError("Gemini analysis timed out. Please try again or select a faster model.", 504, "GEMINI_TIMEOUT") from error
     except httpx.HTTPError as error:
         raise AnalysisError("Cannot connect to Gemini.", 502, "GEMINI_CONNECTION_FAILED") from error
     except (ValidationError, json.JSONDecodeError, IndexError, TypeError, AttributeError) as error:
         raise AnalysisError("Gemini returned invalid structured output.", 502, "GEMINI_INVALID_OUTPUT") from error
+
+
+async def analyze_with_gemini(payload: AnalysisInput, client: httpx.AsyncClient, settings: Settings) -> Analysis:
+    return await generate_structured(payload, Analysis, SYSTEM_PROMPT, client, settings)

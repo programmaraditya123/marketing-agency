@@ -13,6 +13,8 @@ export const http1 = {
   },
   async post<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
     await ensureSession();
-    return client.post<T>(path, body, signal);
+    const result = await client.post<T>(path, body, signal);
+    if (["/auth/register", "/auth/login", "/auth/logout"].includes(path)) bootstrap = undefined;
+    return result;
   },
 };

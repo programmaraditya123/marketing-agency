@@ -18,7 +18,7 @@ const env: Environment = { port: 9000, host: "127.0.0.1", mongoUri: "", mongoDat
 const writeHeaders = { "x-orbit-request": "1", origin: "https://orbit.vidorahub.com" };
 async function setup(platformCors = false) {
   const memory = memoryStore();
-  const store = { users: memory.users.collection, sessions: memory.sessions.collection, activities: memory.activities.collection, jobs: memory.jobs.collection };
+  const store = { visitors: memory.visitors.collection, users: memory.users.collection, sessions: memory.sessions.collection, activities: memory.activities.collection, jobs: memory.jobs.collection };
   const app = Fastify();
   await registerPlugins(app, { ...env, corsOrigins: platformCors ? [] : env.corsOrigins }); registerErrorHandler(app);
   const auth = createAuthService(store), workspace = createWorkspaceService(store.jobs, store.activities);

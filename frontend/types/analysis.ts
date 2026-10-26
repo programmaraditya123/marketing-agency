@@ -12,6 +12,7 @@ export interface Analysis {
   missingInformation: string[]; limitations: string[];
 }
 export interface AnalysisJob {
+  parentAnalysisId?: string; competitorId?: string;
   brief?: import("@/app/analyze/api/workspace").BrandBrief;
   id: string; startUrl: string; status: "queued" | "crawling" | "analyzing" | "completed" | "failed";
   createdAt: string; updatedAt: string; error?: string; analysis?: Analysis;

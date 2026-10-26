@@ -1,5 +1,6 @@
 export default function WorkspaceIcon({ name, className = "h-4 w-4" }: { name: string; className?: string }) {
   const paths: Record<string, string> = {
+    competitors: "M3 21V7h6v14M9 21V3h6v18M15 21V10h6v11M1 21h22M11 7h2M11 11h2M11 15h2",
     overview: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
     product: "m12 3 9 5-9 5-9-5 9-5Zm-9 5v10l9 5 9-5V8M12 13v10",
     audience: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M16 3a4 4 0 0 1 0 8M22 21v-2a4 4 0 0 0-3-3.87M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0",

@@ -1,0 +1,85 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import Fastify from "fastify";
+import { memoryStore } from "./helpers/memory-store";
+import { createRepository } from "../modules/crawlers/crawler.repository";
+import { createMarketingService } from "../modules/marketing/marketing.service";
+import { createWorkspaceService } from "../modules/workspace/workspace.helper";
+import { createAuthService } from "../modules/auth/auth.helper";
+import { registerIdentity } from "../modules/auth/auth.middleware";
+import { registerPlugins } from "../config/plugins";
+import { registerErrorHandler } from "../config/error-handler";
+import marketingRoutes from "../modules/marketing/marketing.routes";
+import type { Environment } from "../config/env";
+import type { MarketingBudget } from "../types/marketing";
+const id = "e".repeat(64), budget: MarketingBudget = { currency: "INR", dailyBudget: 100, monthlyBudget: 1000 };
+const env: Environment = { port: 9000, host: "127.0.0.1", mongoUri: "", mongoDatabase: "test", microserviceUrl: "http://micro.test", serviceToken: "s".repeat(32), jwtSecret: "j".repeat(40), cookieSecure: false, cookieSameSite: "Lax", corsOrigins: ["https://orbit.vidorahub.com"] };
+const plan = { summary: "Recommend a focused experiment.", channels: [], assumptions: [], currency: "INR", effectiveDailyBudget: 33.33, effectiveMonthlyBudget: 1000, unallocatedDaily: 33.33, unallocatedMonthly: 1000, planningDays: 30 };
+
+test("marketing saves budget before Gemini, uses product context, caches and keeps last successful plan after a failed update", async t => {
+  const memory = memoryStore(), repository = createRepository(memory.jobs.collection);
+  const service = createMarketingService(repository, env, createWorkspaceService(memory.jobs.collection, memory.activities.collection));
+  const original = globalThis.fetch; t.after(() => { globalThis.fetch = original; });
+  const attribution = { userId: "user-one", visitorId: "visitor-one" };
+  await repository.insert({ _id: id, ownerId: "user:one", ...attribution, startUrl: "https://example.com", status: "completed", analysis: { products: ["tea"] }, createdAt: "now", updatedAt: "now" });
+  let calls = 0;
+  globalThis.fetch = async (url, options) => {
+    calls++;
+    assert.equal(String(url), "http://micro.test/api/v1/marketing/channels");
+    const input = JSON.parse(String(options?.body));
+    assert.deepEqual(input.business, { products: ["tea"] }); assert.equal(input.trends, null);
+    assert.deepEqual((await repository.get(id)).marketingPlan?.budget, input.budget);
+    assert.equal((options?.headers as Record<string, string>)["X-Service-Token"], env.serviceToken);
+    return calls === 2 ? new Response("", { status: 502 }) : Response.json(plan);
+  };
+  await assert.rejects(service.start(id, "user:other", budget, attribution), /not found/);
+  await assert.rejects(service.start(id, "user:one", { ...budget, dailyBudget: 0.001 }, attribution), /two decimal/);
+  await service.start(id, "user:one", budget, attribution); await service.close();
+  assert.equal((await service.get(id, "user:one"))?.status, "completed");
+  const second = createMarketingService(repository, env, createWorkspaceService(memory.jobs.collection, memory.activities.collection));
+  await second.start(id, "user:one", budget, attribution); assert.equal(calls, 1);
+  await second.start(id, "user:one", { ...budget, monthlyBudget: 2000 }, attribution); await second.close();
+  const failed = await second.get(id, "user:one");
+  assert.equal(failed?.status, "failed"); assert.deepEqual(failed?.previous?.result, plan);
+  assert.equal(failed?.previous?.budget.monthlyBudget, 1000);
+  assert.ok(memory.activities.rows.every(row => row.userId === attribution.userId && row.visitorId === attribution.visitorId));
+  assert.equal(calls, 2);
+});
+
+test("newly collected Trends evidence refreshes a same-budget plan", async t => {
+  const memory = memoryStore(), repository = createRepository(memory.jobs.collection);
+  const service = createMarketingService(repository, env, createWorkspaceService(memory.jobs.collection, memory.activities.collection));
+  const config = { terms: ["tea"], geo: "", timeframe: "today 12-m" as const };
+  const raw = { source: "Google Trends via pytrends", config, collectedAt: "2026-10-26", timeline: [], regions: [], related: {}, warnings: [], metrics: [] };
+  await repository.insert({ _id: id, ownerId: "owner", startUrl: "https://example.com", status: "completed", analysis: {}, createdAt: "now", updatedAt: "now", marketingPlan: { status: "completed", budget, result: plan, updatedAt: "before" }, marketResearch: { status: "completed", config, raw, startedAt: "now", updatedAt: "now" } });
+  const original = globalThis.fetch;
+  t.after(() => { globalThis.fetch = original; });
+  let called = false;
+  globalThis.fetch = async (_url, options) => { called = true; assert.deepEqual(JSON.parse(String(options?.body)).trends, raw); return Response.json(plan); };
+  await service.start(id, "owner", budget, { userId: null, visitorId: "visitor" }); await service.close();
+  assert.equal(called, true); assert.equal((await service.get(id, "owner"))?.trendsCollectedAt, raw.collectedAt);
+});
+
+test("marketing API enforces ownership, CSRF and valid budgets including fractional currency amounts", async t => {
+  const memory = memoryStore(), repository = createRepository(memory.jobs.collection), app = Fastify();
+  await registerPlugins(app, env); registerErrorHandler(app);
+  registerIdentity(app, createAuthService({ jobs: memory.jobs.collection, activities: memory.activities.collection, users: memory.users.collection, visitors: memory.visitors.collection, sessions: memory.sessions.collection }), env);
+  app.get("/api/v1/auth/me", async req => req.identity);
+  const service = createMarketingService(repository, env, createWorkspaceService(memory.jobs.collection, memory.activities.collection));
+  const original = globalThis.fetch; globalThis.fetch = async () => Response.json(plan);
+  t.after(async () => { await service.close(); await app.close(); globalThis.fetch = original; });
+  await app.register(marketingRoutes, { prefix: "/api/v1", service });
+  const guest = await app.inject({ url: "/api/v1/auth/me" }), identity = guest.json();
+  const setCookie = guest.headers["set-cookie"];
+  const cookie = (Array.isArray(setCookie) ? setCookie : [String(setCookie)]).map(item => item.split(";")[0]).join("; ");
+  await repository.insert({ _id: id, ownerId: identity.ownerId, userId: null, visitorId: identity.visitorId, startUrl: "https://example.com", status: "completed", analysis: {}, createdAt: "now", updatedAt: "now" });
+  const url = `/api/v1/analyses/${id}/marketing-plan`, headers = { cookie, origin: "https://orbit.vidorahub.com", "x-orbit-request": "1" };
+  assert.equal((await app.inject({ url })).statusCode, 404);
+  assert.equal((await app.inject({ method: "POST", url, headers: { cookie }, payload: budget })).statusCode, 403);
+  assert.equal((await app.inject({ method: "POST", url, headers, payload: { ...budget, dailyBudget: -1 } })).statusCode, 400);
+  assert.equal((await app.inject({ method: "POST", url, headers, payload: { ...budget, dailyBudget: 0.29 } })).statusCode, 202);
+  await service.close();
+  assert.equal((await app.inject({ url, headers })).json().data.status, "completed");
+  const activity = memory.activities.rows.find(row => row.type === "marketing_planned");
+  assert.equal(activity?.userId, null); assert.equal(activity?.visitorId, identity.visitorId);
+});

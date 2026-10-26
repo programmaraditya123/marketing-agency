@@ -17,7 +17,7 @@ test('Next.js API proxy forwards cookies, query, Origin and POST without browser
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Cache-Control', 'no-store');
       if (req.url === '/api/v1/test/session') {
-        res.setHeader('Set-Cookie', 'orbit_session=proxy-test; Path=/api/v1; HttpOnly; SameSite=Lax');
+        res.setHeader('Set-Cookie', ['orbit_session=proxy-test; Path=/api/v1; HttpOnly; SameSite=Lax', 'orbit_visitor=visitor-proof; Path=/api/v1; HttpOnly; SameSite=Lax']);
       }
       if (req.url === '/api/v1/test/denied') res.statusCode = 401;
       res.end(JSON.stringify({ ok: res.statusCode === 200 }));
@@ -60,6 +60,8 @@ test('Next.js API proxy forwards cookies, query, Origin and POST without browser
     }
     assert.equal(session?.status, 200, output);
     assert.match(session.headers.get('set-cookie'), /orbit_session=proxy-test; Path=\/api\/v1; HttpOnly/);
+    assert.equal(session.headers.getSetCookie().length, 2);
+    assert.ok(session.headers.getSetCookie().some(cookie => cookie.startsWith('orbit_visitor=visitor-proof;')));
     assert.equal(session.headers.get('cache-control'), 'no-store');
     const response = await fetch(`${origin}/api/v1/test/brief?cursor=a%2Bb`, {
       method: 'POST',

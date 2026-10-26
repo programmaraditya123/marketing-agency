@@ -7,7 +7,7 @@ from schemas.analysis import Analysis
 VALIDATION_ONLY = {"title", "format", "minLength", "maxLength", "minItems", "maxItems"}
 
 
-def generation_schema() -> dict[str, Any]:
+def generation_schema(model=Analysis) -> dict[str, Any]:
     def simplify(value: Any) -> Any:
         if isinstance(value, dict):
             return {key: ({name: simplify(schema) for name, schema in item.items()}
@@ -17,4 +17,4 @@ def generation_schema() -> dict[str, Any]:
             return [simplify(item) for item in value]
         return value
 
-    return simplify(Analysis.model_json_schema())
+    return simplify(model.model_json_schema())

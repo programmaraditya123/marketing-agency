@@ -11,6 +11,7 @@ function envelope(properties: Record<string, unknown>, required: string[]) {
 export const createResponse = envelope({ id: text, status }, ["id", "status"]);
 export const jobResponse = envelope({
   id: text, startUrl: text, status, createdAt: text, updatedAt: text, error: text,
+  parentAnalysisId: text, competitorId: text,
   brief: { type: "object", additionalProperties: false, properties: { product: text, audience: text, pastSteps: text, futurePlans: text, goals: text } },
   totalPagesScraped: { type: "integer", minimum: 0 },
   // The microservice owns the nested Pydantic analysis contract and validates it before return.

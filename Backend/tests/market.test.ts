@@ -1,0 +1,80 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { memoryStore } from "./helpers/memory-store";
+import { createRepository } from "../modules/crawlers/crawler.repository";
+import { createMarketService } from "../modules/market/market.service";
+import type { Environment } from "../config/env";
+import type { TrendInput } from "../types/market";
+import Fastify from "fastify";
+import { registerPlugins } from "../config/plugins";
+import { registerErrorHandler } from "../config/error-handler";
+import { registerIdentity } from "../modules/auth/auth.middleware";
+import { createAuthService } from "../modules/auth/auth.helper";
+import { createWorkspaceService } from "../modules/workspace/workspace.helper";
+import marketRoutes from "../modules/market/market.routes";
+const id = "d".repeat(64), config: TrendInput = { terms: ["tea"], geo: "", timeframe: "today 12-m" };
+const env = { microserviceUrl: "http://microservice.test", serviceToken: "test-token" } as Environment;
+const raw = { source: "Google Trends via pytrends", collectedAt: "now", config, timeline: [{ date: "2026-01-01", values: { tea: 50 } }], regions: [], related: {}, warnings: [] };
+
+test("market research commits evidence before Gemini, keeps failed evidence, retries without recollecting, and scopes access", async t => {
+  const repository = createRepository(memoryStore().jobs.collection);
+  await repository.insert({ _id: id, ownerId: "guest:one", userId: null, visitorId: "one", startUrl: "https://example.com", status: "completed", createdAt: "now", updatedAt: "now" });
+  const original = globalThis.fetch; t.after(() => { globalThis.fetch = original; });
+  let collects = 0, interprets = 0;
+  globalThis.fetch = async (url, options) => {
+    assert.equal((options!.headers as Record<string, string>)["X-Service-Token"], "test-token");
+    if (String(url).endsWith("/collect")) { collects++; return Response.json(raw); }
+    interprets++;
+    const saved = await repository.get(id);
+    assert.deepEqual(saved.marketResearch?.raw, raw);
+    assert.equal(saved.marketResearch?.status, "analyzing");
+    assert.deepEqual(JSON.parse(String(options!.body)).data, raw);
+    return interprets === 1 ? new Response("", { status: 502 }) : Response.json({ summary: "Search interest is a signal, not sales." });
+  };
+  const service = createMarketService(repository, env);
+  await assert.rejects(service.get(id, "guest:other"), /not found/);
+  await assert.rejects(service.start(id, "guest:other", config), /not found/);
+  await service.start(id, "guest:one", config);
+  // close drains work; create a fresh executor to model retry after restart.
+  await service.close();
+  assert.equal((await service.get(id, "guest:one"))?.status, "failed");
+  assert.deepEqual((await service.get(id, "guest:one"))?.raw, raw);
+  const retry = createMarketService(repository, env);
+  await assert.rejects(retry.start(id, "guest:one", { ...config, terms: ["coffee"] }), /original terms/);
+  await retry.start(id, "guest:one", config); await retry.close();
+  assert.equal((await retry.get(id, "guest:one"))?.status, "completed");
+  assert.equal(collects, 1); assert.equal(interprets, 2);
+  const cached = createMarketService(repository, env);
+  await cached.start(id, "guest:one", config); await cached.close();
+  assert.equal(collects, 1); assert.equal(interprets, 2);
+  assert.equal((await repository.get(id)).visitorId, "one");
+});
+
+test("market API is wired with owner isolation, CSRF, bounded inputs and attributed activity", async t => {
+  const memory = memoryStore(), repository = createRepository(memory.jobs.collection), app = Fastify();
+  const environment: Environment = { ...env, port: 9000, host: "127.0.0.1", mongoUri: "", mongoDatabase: "test", jwtSecret: "j".repeat(40), cookieSecure: false, cookieSameSite: "Lax", corsOrigins: ["https://orbit.vidorahub.com"] };
+  await registerPlugins(app, environment); registerErrorHandler(app);
+  registerIdentity(app, createAuthService({ jobs: memory.jobs.collection, visitors: memory.visitors.collection, users: memory.users.collection, sessions: memory.sessions.collection, activities: memory.activities.collection }), environment);
+  app.get("/api/v1/auth/me", async request => request.identity);
+  const service = createMarketService(repository, environment, createWorkspaceService(memory.jobs.collection, memory.activities.collection));
+  const original = globalThis.fetch;
+  globalThis.fetch = async url => Response.json(String(url).endsWith("/collect") ? raw : { summary: "Observed interest only." });
+  t.after(async () => { await service.close(); await app.close(); globalThis.fetch = original; });
+  await app.register(marketRoutes, { prefix: "/api/v1", service });
+  const guest = await app.inject({ url: "/api/v1/auth/me" });
+  const cookies = guest.headers["set-cookie"];
+  const cookie = (Array.isArray(cookies) ? cookies : [String(cookies)]).map(value => value.split(";")[0]).join("; ");
+  const identity = guest.json();
+  await repository.insert({ _id: id, ownerId: identity.ownerId, userId: null, visitorId: identity.visitorId, startUrl: "https://example.com", status: "completed", createdAt: "now", updatedAt: "now" });
+  const url = `/api/v1/analyses/${id}/market-research`, headers = { cookie, origin: "https://orbit.vidorahub.com", "x-orbit-request": "1" };
+  assert.equal((await app.inject({ url, headers })).json().data, null);
+  assert.equal((await app.inject({ url })).statusCode, 404);
+  assert.equal((await app.inject({ method: "POST", url, headers: { cookie }, payload: config })).statusCode, 403);
+  assert.equal((await app.inject({ method: "POST", url, headers, payload: { ...config, terms: [] } })).statusCode, 400);
+  const response = await app.inject({ method: "POST", url, headers, payload: config });
+  assert.equal(response.statusCode, 202);
+  await service.close();
+  assert.equal((await app.inject({ url, headers })).json().data.status, "completed");
+  const activity = memory.activities.rows.find(row => row.type === "market_researched");
+  assert.equal(activity?.userId, null); assert.equal(activity?.visitorId, identity.visitorId);
+});

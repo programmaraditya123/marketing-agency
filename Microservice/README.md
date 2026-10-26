@@ -19,3 +19,5 @@ catalyst deploy --only appsail:market-agency
 **Note:** Make sure you are in the Microservice project directory before running the command.
 
 CORS is always enabled with fixed origins `https://orbit.vidorahub.com` and `http://localhost:3000` in `config/cors.py`. Environment variables cannot replace or disable this allowlist. Credentials are supported; authentication remains required. Catalyst gateway preflights also require the project Authorized Domains configuration.
+
+Private POST /api/v1/competitors/suggestions accepts the saved business context and asks Gemini directly for ten competitors with company names, official website URLs and short descriptions. It uses the existing token/key/model settings and no Google/web-search tools.

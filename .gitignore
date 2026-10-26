@@ -26,6 +26,7 @@ __pycache__/
 *$py.class
 *.so
 .packages/
+.local-packages/
 packages/
 
 # Virtual environments

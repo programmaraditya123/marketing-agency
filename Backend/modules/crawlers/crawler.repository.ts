@@ -12,6 +12,9 @@ export function createRepository(jobs: Collection<CrawlJob>) {
       if (!job) throw new AppError(404, "Analysis not found.");
       return job;
     },
+    async children(id: string) {
+      return jobs.find({ parentAnalysisId: id }, { projection: { _id: 1, competitorId: 1, status: 1 } }).limit(20).toArray();
+    },
   };
 }
 export type CrawlRepository = ReturnType<typeof createRepository>;

@@ -10,11 +10,15 @@ import BriefEditor from "./BriefEditor";
 import HistoryPanel from "./HistoryPanel";
 import { trackSection } from "../api/workspace";
 import { useAuth } from "@/components/auth/AuthProvider";
-export default function Workspace({ initialId, initialWebsite }: { initialId?: string; initialWebsite?: string }) {
+import Link from "next/link";
+import CompetitorPanel from "./CompetitorPanel";
+import MarketPanel from "./MarketPanel";
+import MarketingPanel from "./MarketingPanel";
+export default function Workspace({ initialId, initialWebsite, initialSection }: { initialId?: string; initialWebsite?: string; initialSection?: string }) {
   const router = useRouter();
   const { user } = useAuth();
   const { job, error, submit, loading, busy, updateBrief } = useAnalysis(initialId);
-  const [active, setActive] = useState("Brand Overview"), [website, setWebsite] = useState(initialWebsite || "");
+  const [active, setActive] = useState(initialSection || "Brand Overview"), [website, setWebsite] = useState(initialWebsite || "");
   const [trackingError, setTrackingError] = useState("");
   const started = useRef(false), lastViewed = useRef("");
   async function analyze(value: string) {
@@ -40,13 +44,17 @@ export default function Workspace({ initialId, initialWebsite }: { initialId?: s
         <label htmlFor="workspace-url" className="sr-only">Website to analyze</label><div className="flex min-w-48 flex-1 items-center gap-3 px-3"><span aria-hidden="true" className="text-violet-400">◎</span><input id="workspace-url" required maxLength={2048} value={website} onChange={event => setWebsite(event.target.value)} placeholder="Enter your website, e.g. yourbrand.com" inputMode="url" className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-slate-400" /></div>
         <button disabled={busy || loading} className="min-h-11 flex-1 rounded-xl bg-violet-600 px-5 text-xs font-semibold text-white hover:bg-violet-500 disabled:opacity-50 sm:flex-none">{busy ? "Research in progress…" : "Analyze Website ↗"}</button>
       </form>
-      <p className="mb-6 text-[11px] leading-5 text-slate-400">Searches and workspace activity are saved privately. Guest data stays linked to this browser session; sign in to keep it across devices. Activity is retained for 90 days.</p>
+      <p className="mb-6 text-[11px] leading-5 text-slate-400">Searches and workspace activity are saved privately. Guest data stays linked to this browser; sign in to keep it across devices. Activity is retained for 90 days.</p>
       {error && <div role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error} <button className="ml-2 underline" onClick={() => window.location.reload()}>Reconnect</button></div>}
       {trackingError && <p role="status" className="mb-4 text-xs text-amber-700">{trackingError}</p>}
+      {job?.parentAnalysisId && <Link href={`/analyze?id=${job.parentAnalysisId}&view=competitors`} className="mb-5 inline-block text-xs font-semibold text-violet-600 hover:underline">← Back to competitor results</Link>}
       {loading && <p role="status" className="mb-6 text-sm text-violet-700">Opening your saved research…</p>}
       {job && job.status !== "completed" && <AnalysisProgress job={job} />}
       {active === "Search History" || active === "Your Activity" ? <HistoryPanel key={`${active}:${user?.id || "guest"}`} activity={active === "Your Activity"} />
         : active === "Past Steps" || active === "Future Plans" ? <BriefEditor key={job?.id || "empty"} job={job} focus={active} onSaved={updateBrief} />
+        : active === "Marketing Plan" ? <MarketingPanel key={`${job?.id}:${job?.status}`} job={job} />
+        : active === "Market Demand" ? <MarketPanel key={`${job?.id}:${job?.status}`} job={job} />
+        : active === "Competitor Search" ? <CompetitorPanel job={job} />
         : active === "Brand Overview" ? <WorkspaceOverview job={job} onSelect={setActive} />
         : <ResearchPanel key={`${job?.id}:${active}`} section={active} job={job} />}
     </div>

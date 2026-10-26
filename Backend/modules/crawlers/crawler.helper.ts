@@ -5,8 +5,9 @@ import type { Scrape } from "../../types/crawler";
 import { normalizeUrl, resolvePublic } from "./crawler.middleware";
 import { scrapeWebsite } from "./crawler.scrape";
 import { AppError } from "../../utils/app-error";
+import type { Attribution } from "../../types/auth";
 type Analyzer = (scrape: Scrape, signal: AbortSignal) => Promise<Record<string, unknown>>;
-export function createCrawlService(repository: CrawlRepository, analyze: Analyzer, log: FastifyBaseLogger, scrape = scrapeWebsite) {
+export function createCrawlService(repository: Pick<CrawlRepository, "get" | "insert" | "update">, analyze: Analyzer, log: FastifyBaseLogger, scrape = scrapeWebsite) {
   const active = new Set<Promise<void>>();
   let stopping = false;
   async function processJob(id: string, startUrl: string): Promise<void> {
@@ -25,7 +26,7 @@ export function createCrawlService(repository: CrawlRepository, analyze: Analyze
     }
   }
   return {
-    async create(value: string, ownerId?: string) {
+    async create(value: string, ownerId?: string, context?: { parentAnalysisId: string; competitorId: string }, attribution?: Attribution) {
       const url = normalizeUrl(value);
       await resolvePublic(url);
       if (stopping) throw new AppError(503, "The service is shutting down. Please try again shortly.");
@@ -37,7 +38,7 @@ export function createCrawlService(repository: CrawlRepository, analyze: Analyze
       const reservation = new Promise<void>(resolve => { release = resolve; });
       active.add(reservation);
       try {
-        await repository.insert({ _id: id, ownerId, startUrl: url.href, status: "queued", createdAt, updatedAt: createdAt });
+        await repository.insert({ _id: id, ownerId, userId: attribution?.userId || null, visitorId: attribution?.visitorId || null, ...context, startUrl: url.href, status: "queued", createdAt, updatedAt: createdAt });
         void processJob(id, url.href).catch(() => log.error("Could not persist failed job status"))
           .finally(() => { active.delete(reservation); release(); });
       } catch (error) { active.delete(reservation); release(); throw error; }
@@ -47,6 +48,7 @@ export function createCrawlService(repository: CrawlRepository, analyze: Analyze
       const job = await repository.get(id);
       if (ownerId && job.ownerId !== ownerId) throw new AppError(404, "Analysis not found.");
       return { id: job._id, startUrl: job.startUrl, status: job.status, createdAt: job.createdAt,
+        parentAnalysisId: job.parentAnalysisId, competitorId: job.competitorId,
         updatedAt: job.updatedAt, error: job.error, analysis: job.analysis, brief: job.brief,
         totalPagesScraped: job.scrape?.pages.length || 0, socialLinks: job.scrape?.socialLinks || [],
         sources: job.scrape?.pages.map(({ url, title }) => ({ url, title })) || [], warnings: job.scrape?.warnings || [] };
