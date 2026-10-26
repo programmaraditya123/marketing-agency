@@ -28,19 +28,22 @@ def test_orbit_preflight_and_error_headers_preserve_service_auth(monkeypatch):
         assert "access-control-allow-origin" not in response.headers
 
 
-def test_configured_origin_trailing_slash_is_normalized(monkeypatch):
-    monkeypatch.setenv("CORS_ORIGINS", ORIGIN + "/")
+def test_environment_cannot_replace_hardcoded_origins(monkeypatch):
+    monkeypatch.setenv("CORS_ORIGINS", "https://untrusted.example")
     app = FastAPI()
     register_cors(app)
     with TestClient(app) as client:
         response = client.get("/missing", headers={"Origin": ORIGIN})
         assert response.headers["access-control-allow-origin"] == ORIGIN
+        response = client.get("/missing", headers={"Origin": "https://untrusted.example"})
+        assert "access-control-allow-origin" not in response.headers
 
 
-def test_platform_managed_cors_does_not_duplicate_headers(monkeypatch):
+def test_environment_cannot_disable_hardcoded_cors(monkeypatch):
     monkeypatch.setenv("CORS_MANAGED_BY_CATALYST", "true")
     app = FastAPI()
     register_cors(app)
     with TestClient(app) as client:
         response = client.get("/missing", headers={"Origin": ORIGIN})
-        assert "access-control-allow-origin" not in response.headers
+        assert response.headers["access-control-allow-origin"] == ORIGIN
+        assert response.headers["access-control-allow-credentials"] == "true"

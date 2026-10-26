@@ -1,4 +1,5 @@
 import { loadEnvFile } from "node:process";
+import { CORS_ORIGINS } from "./cors";
 try { loadEnvFile(); } catch (error) {
   if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
 }
@@ -23,8 +24,7 @@ export function readEnv() {
     port, host: process.env.HOST || "0.0.0.0",
     mongoUri: process.env.MONGODB_URI?.trim() || required("MONGO_URI"), mongoDatabase: process.env.MONGODB_DATABASE || "marketing_agency",
     microserviceUrl: microserviceUrl.origin, serviceToken, jwtSecret, cookieSecure, cookieSameSite,
-    corsManagedByCatalyst: process.env.CORS_MANAGED_BY_CATALYST === "true",
-    corsOrigins: (process.env.CORS_ORIGINS || "http://localhost:3000,https://orbit.vidorahub.com").split(",").map(s => s.trim().replace(/\/+$/, "")).filter(Boolean),
+    corsOrigins: [...CORS_ORIGINS],
   };
 }
 export type Environment = ReturnType<typeof readEnv>;

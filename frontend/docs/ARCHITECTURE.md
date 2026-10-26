@@ -568,6 +568,8 @@ When the project evolves, update this document first or alongside the implementa
 
 ## Connected workspace implementation
 
+Browser Fastify requests always use the relative `/api/v1` base. `next.config.ts` forwards this prefix to the server-side `ORBIT_BACKEND_URL` (legacy public URL accepted as fallback). This is a same-origin proxy to avoid Catalyst gateway preflights and third-party cookie restrictions. The path remains `/api/v1` so Backend's HttpOnly cookie path works unchanged; Origin and the CSRF header still reach Backend. Never proxy the private Microservice or add its token to browser requests.
+
 `app/analyze/page.tsx` places async search-parameter access beneath Suspense for Next.js Cache Components, then composes route-local workspace components. Its key resets report state when switching report URLs or starting a new workspace. `app/hooks/useAnalysis.ts` starts/polls jobs and restores a saved report by explicit URL ID. The homepage form navigates to the workspace; it does not run the crawler inline. `app/analyze/api/workspace.ts` owns typed history, activity, and brief requests.
 
 `app/auth/` owns the account page/form and typed auth API. Shared `components/auth/` provides account context and navigation. `lib/http1.ts` bootstraps one guest identity before parallel API calls. Only the Fastify client sends credentials and the custom CSRF header; `http2.ts` remains separate and does not receive these credentials. Tokens never enter browser storage. Account session changes update context and navigate to a fresh workspace.

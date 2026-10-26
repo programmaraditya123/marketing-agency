@@ -14,13 +14,13 @@ import { createCrawlService } from "../modules/crawlers/crawler.helper";
 import { hashPassword, verifyPassword } from "../modules/auth/auth.password";
 import { memoryStore } from "./helpers/memory-store";
 import type { Environment } from "../config/env";
-const env: Environment = { port: 9000, host: "127.0.0.1", mongoUri: "", mongoDatabase: "test", microserviceUrl: "http://127.0.0.1:8000", serviceToken: "service-test".repeat(4), jwtSecret: "auth-test".repeat(8), cookieSecure: true, cookieSameSite: "Lax", corsManagedByCatalyst: false, corsOrigins: ["https://orbit.test"] };
-const writeHeaders = { "x-orbit-request": "1", origin: "https://orbit.test" };
+const env: Environment = { port: 9000, host: "127.0.0.1", mongoUri: "", mongoDatabase: "test", microserviceUrl: "http://127.0.0.1:8000", serviceToken: "service-test".repeat(4), jwtSecret: "auth-test".repeat(8), cookieSecure: true, cookieSameSite: "Lax", corsOrigins: ["https://orbit.vidorahub.com"] };
+const writeHeaders = { "x-orbit-request": "1", origin: "https://orbit.vidorahub.com" };
 async function setup(platformCors = false) {
   const memory = memoryStore();
   const store = { users: memory.users.collection, sessions: memory.sessions.collection, activities: memory.activities.collection, jobs: memory.jobs.collection };
   const app = Fastify();
-  await registerPlugins(app, { ...env, corsManagedByCatalyst: platformCors }); registerErrorHandler(app);
+  await registerPlugins(app, { ...env, corsOrigins: platformCors ? [] : env.corsOrigins }); registerErrorHandler(app);
   const auth = createAuthService(store), workspace = createWorkspaceService(store.jobs, store.activities);
   registerIdentity(app, auth, env);
   const service = createCrawlService(createRepository(store.jobs), async () => ({ company: {} }), app.log,
@@ -102,14 +102,14 @@ test("CSRF, input validation, expired cookies, invalid bearer tokens and CORS", 
   const old = `orbit_session=${createJwt(env.jwtSecret).issue("f".repeat(64), -1)}`;
   assert.equal((await app.inject({ url: "/api/v1/auth/me", headers: { cookie: old } })).statusCode, 200);
   assert.equal((await app.inject({ url: "/api/v1/history", headers: { cookie: old } })).statusCode, 401);
-  const response = await app.inject({ method: "OPTIONS", url: "/api/v1/auth/login", headers: { origin: "https://orbit.test", "access-control-request-method": "POST", "access-control-request-headers": "x-orbit-request,content-type" } });
+  const response = await app.inject({ method: "OPTIONS", url: "/api/v1/auth/login", headers: { origin: "https://orbit.vidorahub.com", "access-control-request-method": "POST", "access-control-request-headers": "x-orbit-request,content-type" } });
   assert.equal(response.statusCode, 204); assert.equal(response.headers["access-control-allow-credentials"], "true");
 });
-test("platform-managed CORS retains JWT and CSRF enforcement without duplicate headers", async t => {
+test("hardcoded CORS retains JWT and CSRF enforcement despite configuration overrides", async t => {
   const { app } = await setup(true); t.after(() => app.close());
-  const token = await app.inject({ url: "/api/v1/history", headers: { origin: "https://orbit.test", authorization: "Bearer invalid" } });
+  const token = await app.inject({ url: "/api/v1/history", headers: { origin: "https://orbit.vidorahub.com", authorization: "Bearer invalid" } });
   assert.equal(token.statusCode, 401);
-  assert.equal(token.headers["access-control-allow-origin"], undefined);
+  assert.equal(token.headers["access-control-allow-origin"], "https://orbit.vidorahub.com");
   const csrf = await app.inject({ method: "POST", url: "/api/v1/auth/register", headers: { ...writeHeaders, origin: "https://evil.test" }, payload: account });
   assert.equal(csrf.statusCode, 403);
 });

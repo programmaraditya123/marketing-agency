@@ -789,3 +789,5 @@ The current job executor supports one backend replica; unfinished jobs become fa
 `modules/workspace/` owns history, allowlisted activity, report ownership, and brief persistence. Cursors use timestamp and ID for stable pagination. Shared MongoDB connections, typed collections, indexes and TTLs stay in `config/database.ts`. The root README documents all new contracts, retention and deployment requirements.
 
 Crawler DNS validation selects a public answer and pins it for the HTTP connection, preferring IPv4 when available. DNS64's well-known `64:ff9b::/96` prefix is supported only when its embedded IPv4 destination is public. Private/reserved answers are never selected, even when a hostname also returns public answers; every redirect is validated again.
+
+CORS origins are hardcoded in `config/cors.ts`: `https://orbit.vidorahub.com` and `http://localhost:3000`. Both middleware and CSRF Origin validation use this list; environment settings cannot override it.

@@ -31,6 +31,10 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Deploy on Vercel
 
+Browser API requests use `/api/v1` on the frontend domain. A Next.js external rewrite forwards these to Backend, preserving request methods, query strings, cookies and response `Set-Cookie`. This avoids Catalyst's cross-origin OPTIONS gateway issue and keeps session cookies first-party. JWT and CSRF validation still run in Backend; the Microservice token remains server-only.
+
+Set `ORBIT_BACKEND_URL` in Vercel to `https://market-agency-backend-50046841977.development.catalystappsail.in/api/v1`, then rebuild and deploy the frontend. Existing `NEXT_PUBLIC_FASTIFY_API_URL` is accepted as a fallback proxy target. For local development set `ORBIT_BACKEND_URL=http://127.0.0.1:9000/api/v1`. The target must include `/api/v1`. This requires a running Next.js server (Vercel supports it); static exports do not support external rewrites.
+
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

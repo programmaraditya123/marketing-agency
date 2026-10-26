@@ -787,7 +787,7 @@ Changes to the route/service relationship, model adapters, MCP exposure, workflo
 
 The objective is a secure, maintainable, testable, and extensible Python microservice that can support traditional APIs and increasingly sophisticated AI workflows without architectural inconsistency.
 
-`config/cors.py` centralizes explicit-origin CORSMiddleware registration from CORS_ORIGINS. Main remains application composition only. CORS does not bypass service-token authentication. Catalyst also requires a platform Authorized Domains entry for gateway-handled OPTIONS; app middleware cannot add headers to a response that never reaches ASGI.
+`config/cors.py` centralizes explicit-origin CORSMiddleware registration using a fixed CORS_ORIGINS tuple containing https://orbit.vidorahub.com and http://localhost:3000. Environment variables cannot change or disable this allowlist. Main remains application composition only. CORS does not bypass service-token authentication. Catalyst also requires a platform Authorized Domains entry for gateway-handled OPTIONS; app middleware cannot add headers to a response that never reaches ASGI.
 
 ## Gemini website analysis
 

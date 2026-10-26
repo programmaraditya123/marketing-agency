@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { createAnalyzer } from "../config/microservice";
 import type { Environment } from "../config/env";
 const env: Environment = { port: 9000, host: "127.0.0.1", mongoUri: "", mongoDatabase: "test",
-  microserviceUrl: "http://127.0.0.1:8000", serviceToken: "test-token", corsOrigins: [], jwtSecret: "test-secret".repeat(4), cookieSecure: false, cookieSameSite: "Lax", corsManagedByCatalyst: false };
+  microserviceUrl: "http://127.0.0.1:8000", serviceToken: "test-token", corsOrigins: [], jwtSecret: "test-secret".repeat(4), cookieSecure: false, cookieSameSite: "Lax" };
 const scrape = { startUrl: "https://example.com", pages: [], socialLinks: [], warnings: [] };
 test("preserves specific provider failure without forwarding arbitrary provider text", async t => {
   t.mock.method(globalThis, "fetch", async () => new Response(JSON.stringify({ code: "GEMINI_TIMEOUT", message: "secret detail" }), { status: 504 }));

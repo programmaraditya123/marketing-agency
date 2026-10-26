@@ -4,6 +4,7 @@ import { createJwt } from "../../config/jwt";
 import { sessionCookie, setSessionCookie } from "../../config/cookies";
 import { AppError } from "../../utils/app-error";
 import type { AuthService } from "./auth.helper";
+import { CORS_ORIGINS } from "../../config/cors";
 export function registerIdentity(app: FastifyInstance, auth: AuthService, env: Environment) {
   const jwt = createJwt(env.jwtSecret);
   app.decorateRequest("identity");
@@ -12,7 +13,7 @@ export function registerIdentity(app: FastifyInstance, auth: AuthService, env: E
     reply.header("Cache-Control", "no-store");
     if (!["GET", "HEAD"].includes(request.method)) {
       if (request.headers["x-orbit-request"] !== "1" ||
-        (request.headers.origin && !env.corsOrigins.includes(request.headers.origin))) throw new AppError(403, "Request origin could not be verified.");
+        (request.headers.origin && !CORS_ORIGINS.some(origin => origin === request.headers.origin))) throw new AppError(403, "Request origin could not be verified.");
     }
     const bearer = request.headers.authorization;
     if (bearer && !/^Bearer \S+$/.test(bearer)) throw new AppError(401, "Invalid access token.");

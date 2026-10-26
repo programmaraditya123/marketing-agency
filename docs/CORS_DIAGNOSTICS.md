@@ -39,3 +39,7 @@ Official references:
 
 - https://docs.catalyst.zoho.com/en/cloud-scale/help/authentication/whitelisting/authorized-domains/introduction/
 - https://github.com/catalystbyzoho/agent-skills/blob/main/skills/catalyst-appsail/references/appsail-crossorigin.md
+
+Latest verification (2026-10-26): user requested hardcoded origins. Backend/config/cors.ts and Microservice/config/cors.py now always allow https://orbit.vidorahub.com and http://localhost:3000; environment flags cannot disable or change them. Both Development services were successfully redeployed. All 49 tests pass; normal health/auth error responses have correct credentialed CORS, but public OPTIONS on both services still returns empty 200 without CORS headers. The existing gateway preflight issue persists after these source changes.
+
+Same-origin resolution prepared: Orbit is hosted on Vercel (user confirmed). The frontend browser client now uses /api/v1; next.config.ts proxies to the server-side ORBIT_BACKEND_URL, accepting the existing NEXT_PUBLIC_FASTIFY_API_URL as fallback. Set the upstream to https://market-agency-backend-50046841977.development.catalystappsail.in/api/v1 and redeploy the Vercel frontend. The browser will use https://orbit.vidorahub.com/api/v1/auth/me, so its requests no longer depend on Catalyst CORS preflights and its HttpOnly cookie becomes first-party. Next proxy integration, lint, typecheck and production build passed. The public Vercel deployment has not been updated by this session; deployment access is unavailable.
