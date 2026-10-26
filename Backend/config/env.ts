@@ -23,7 +23,8 @@ export function readEnv() {
     port, host: process.env.HOST || "0.0.0.0",
     mongoUri: process.env.MONGODB_URI?.trim() || required("MONGO_URI"), mongoDatabase: process.env.MONGODB_DATABASE || "marketing_agency",
     microserviceUrl: microserviceUrl.origin, serviceToken, jwtSecret, cookieSecure, cookieSameSite,
-    corsOrigins: (process.env.CORS_ORIGINS || "http://localhost:3000").split(",").map(s => s.trim()),
+    corsManagedByCatalyst: process.env.CORS_MANAGED_BY_CATALYST === "true",
+    corsOrigins: (process.env.CORS_ORIGINS || "http://localhost:3000,https://orbit.vidorahub.com").split(",").map(s => s.trim().replace(/\/+$/, "")).filter(Boolean),
   };
 }
 export type Environment = ReturnType<typeof readEnv>;

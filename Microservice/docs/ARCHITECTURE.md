@@ -787,6 +787,8 @@ Changes to the route/service relationship, model adapters, MCP exposure, workflo
 
 The objective is a secure, maintainable, testable, and extensible Python microservice that can support traditional APIs and increasingly sophisticated AI workflows without architectural inconsistency.
 
+`config/cors.py` centralizes explicit-origin CORSMiddleware registration from CORS_ORIGINS. Main remains application composition only. CORS does not bypass service-token authentication. Catalyst also requires a platform Authorized Domains entry for gateway-handled OPTIONS; app middleware cannot add headers to a response that never reaches ASGI.
+
 ## Gemini website analysis
 
 The provider adapter uses a simplified generation schema from `model/gemini_schema.py`. Provider-only simplification removes URI format matchers and nested array/string length bounds that exceed Gemini's constrained-decoder state limit. Field names, required fields, object structure and enums are retained. The full `schemas/analysis.py` contract validates every returned report afterward; evidence validation remains in the service layer.
