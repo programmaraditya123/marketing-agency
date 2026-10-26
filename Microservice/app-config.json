@@ -1,5 +1,5 @@
 {
-  "command": "sh -c 'PYTHONPATH=./packages python3 -m uvicorn main:app --host 0.0.0.0 --port ${X_ZOHO_CATALYST_LISTEN_PORT}'",
+  "command": "sh -c 'PYTHONPATH=./packages python3 server.py'",
   "build_path": ".",
   "stack": "python_3_10",
   "env_variables": {},

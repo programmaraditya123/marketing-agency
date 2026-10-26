@@ -1,0 +1,9 @@
+import type { Analysis } from "@/types/analysis";
+import FindingView from "./FindingView";
+import ReportSection, { DetailList } from "./ReportSection";
+export default function ProductAudienceReport({ analysis }: { analysis: Analysis }) {
+  return <>
+    <ReportSection title="Products & services">{!analysis.products.length && <p className="text-sm text-slate-500">No products could be identified from the collected pages.</p>}<div className="grid gap-6 md:grid-cols-2">{analysis.products.map((product, i) => <article key={i} className="space-y-4 rounded-xl bg-slate-50 p-5"><div><p className="text-xs uppercase tracking-wider text-cyan-800">{product.category}</p><h4 className="mt-1 text-lg font-semibold">{product.name}</h4></div><FindingView finding={product.description} /><DetailList title="Benefits" values={product.benefits} /><FindingView label="Pricing" finding={product.pricing} /></article>)}</div></ReportSection>
+    <ReportSection title="Who they serve" note="Audience segments and recommended channels are research hypotheses unless supported directly by the website. These are not verified customer demographics.">{!analysis.targetAudience.length && <p className="text-sm text-slate-500">More customer information is needed to identify the audience.</p>}<div className="grid gap-6 md:grid-cols-2">{analysis.targetAudience.map((audience, i) => <article key={i} className="space-y-5 rounded-xl border border-slate-200 p-5"><h4 className="font-semibold">{audience.segment}</h4><FindingView finding={audience.description} /><DetailList title="Needs" values={audience.needs} /><DetailList title="Pain points" values={audience.painPoints} /><DetailList title="Buying triggers" values={audience.buyingTriggers} /><DetailList title="Suggested channels" values={audience.suggestedChannels} /></article>)}</div></ReportSection>
+  </>;
+}

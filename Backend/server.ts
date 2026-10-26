@@ -1,36 +1,11 @@
-import Fastify from "fastify"
-
-const app = Fastify({
-    logger : true
-})
-
-app.get("/",async () => {
-    return {
-        success : true,
-        message : "backend is runing"
-    }
-})
-
-app.get("/health",async () => {
-    return {
-        success : true,
-        message : "Health is good and fast which is my favourite"
-    }
-})
-
-const start = async () => {
-    try {
-        const port = Number(process.env.X_ZOHO_CATALYST_LISTEN_PORT || 9000);
-        await app.listen({
-            port,
-            host : "0.0.0.0"
-        });
-        
-    } catch (error) {
-        app.log.error(error)
-        process.exit(1)
-        
-    }
+import { buildApplication } from "./config/application";
+import { readEnv } from "./config/env";
+import { registerShutdown } from "./config/shutdown";
+async function start(): Promise<void> {
+  const env = readEnv();
+  const app = await buildApplication(env);
+  registerShutdown(app);
+  try { await app.listen({ port: env.port, host: env.host }); }
+  catch (error) { app.log.error(error); await app.close(); process.exitCode = 1; }
 }
-
-start();
+void start().catch(() => { console.error("Backend startup failed. Check environment configuration and MongoDB availability."); process.exitCode = 1; });
