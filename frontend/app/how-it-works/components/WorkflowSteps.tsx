@@ -1,11 +1,44 @@
 const steps = [
-  { title: "Enter the website URL", text: "Paste a public website into Orbit. You can enter a full URL or a domain name.", detail: "Start with the brand’s main website. Pages behind a login are not included." },
-  { title: "Orbit reads the website", text: "Orbit explores up to 8 pages, including accessible product, service, about and pricing pages. It also finds social links published on those pages.", detail: "Some websites block crawlers or need JavaScript to show their content. Your report explains gaps in the research." },
-  { title: "Get the brand and audience analysis", text: "Review the company, products, brand positioning and likely target audiences. Explore audience needs, buying triggers, content themes and marketing opportunities.", detail: "Observed facts include source links. Inferences and unknown information are labeled so you can review them with your client." },
-  { title: "Use the research", text: "Use the report to shape your brief, ask better client questions and plan your next campaign. Download the structured report as JSON when you need it.", detail: "Competitor research, internet trend analysis, image and video prompts, and banner and poster creation are planned next." },
+  {
+    title: "Enter the website URL",
+    text: "Provide a public brand website URL or domain name. Orbit accepts any HTTP or HTTPS link.",
+    detail: "Start with the main domain. Orbit navigates the publicly accessible landing, product, and pricing pages.",
+  },
+  {
+    title: "Orbit crawls & extracts evidence",
+    text: "Orbit explores up to 8 key pages, extracting positioning statements, feature benefits, pricing, and social channels.",
+    detail: "Every extracted fact is linked to its source page so you and your team can verify claims.",
+  },
+  {
+    title: "AI synthesizes brand & audience",
+    text: "Gemini maps value propositions, builds persona hypotheses, identifies buying triggers, and surfaces high-ROI growth angles.",
+    detail: "Facts are clearly labeled as observed, inferred, or unknown to distinguish evidence from hypotheses.",
+  },
+  {
+    title: "Explore market, competitors & budget",
+    text: "Launch 1-click competitor audits, measure real-world Google search momentum, and calculate 30-day channel budget caps.",
+    detail: "Export structured JSON reports or refine your founder brief directly in your workspace.",
+  },
 ];
+
 export default function WorkflowSteps() {
-  return <section aria-labelledby="workflow-title" className="py-14 sm:py-20"><h2 id="workflow-title" className="mb-8 text-3xl font-semibold tracking-tight text-violet-950">From website to brand brief.</h2>
-    <ol className="grid gap-5 md:grid-cols-2">{steps.map((step, index) => <li key={step.title} className="rounded-2xl border border-slate-200 bg-white p-7"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-100 text-sm font-semibold text-violet-800">0{index + 1}</span><h3 className="mt-6 text-xl font-semibold text-violet-950">{step.title}</h3><p className="mt-3 text-sm leading-7 text-slate-600">{step.text}</p><p className="mt-4 border-t border-slate-100 pt-4 text-xs leading-6 text-slate-500">{step.detail}</p></li>)}</ol>
-  </section>;
+  return (
+    <section aria-labelledby="workflow-title" className="py-14 sm:py-20">
+      <h2 id="workflow-title" className="mb-8 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+        From website link to complete brand intelligence.
+      </h2>
+      <ol className="grid gap-5 md:grid-cols-2">
+        {steps.map((step, index) => (
+          <li key={step.title} className="rounded-2xl border border-slate-200/90 bg-white p-7 shadow-2xs">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-xs font-bold text-violet-800">
+              0{index + 1}
+            </span>
+            <h3 className="mt-5 text-lg font-bold text-slate-900">{step.title}</h3>
+            <p className="mt-2 text-xs leading-relaxed text-slate-600 sm:text-sm">{step.text}</p>
+            <p className="mt-4 border-t border-slate-100 pt-3 text-[11px] leading-relaxed text-slate-400">{step.detail}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
 }

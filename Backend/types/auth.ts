@@ -10,7 +10,7 @@ export interface Session {
 export interface Identity { sessionId: string; ownerId: string; userId?: string; visitorId?: string }
 export interface Activity {
   userId?: string | null; visitorId?: string | null;
-  _id: string; ownerId: string; type: "website_searched" | "section_viewed" | "brief_updated" | "signed_in" | "signed_up" | "competitors_searched" | "competitor_analyzed" | "market_researched" | "marketing_planned";
+  _id: string; ownerId: string; type: "website_searched" | "section_viewed" | "brief_updated" | "signed_in" | "signed_up" | "competitors_searched" | "competitor_analyzed" | "market_researched" | "marketing_planned" | "content_strategy_generated";
   analysisId?: string; detail: string; createdAt: Date; expiresAt: Date;
 }
 export interface BrandBrief {

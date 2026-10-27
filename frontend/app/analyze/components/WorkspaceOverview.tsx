@@ -1,25 +1,112 @@
 import type { AnalysisJob } from "@/types/analysis";
 import Icon from "./WorkspaceIcon";
+
 export default function WorkspaceOverview({ job, onSelect }: { job: AnalysisJob | null; onSelect: (value: string) => void }) {
   const analysis = job?.status === "completed" ? job.analysis : undefined;
   const cards = [
-    { title: "Competitor Search", icon: "competitors", tone: "bg-rose-100 text-rose-600", subtitle: "YOUR MARKET", description: "Get ten competitor suggestions from Gemini, with website links and short descriptions. Explore their websites with detailed research.", count: "Discover your competitors" },
-    { title: "Your Product", icon: "product", tone: "bg-violet-100 text-violet-600", subtitle: "WHAT YOU BRING", description: analysis?.products[0]?.description.value || "Turn your offer into a clear story. Explore products, benefits, and pricing.", count: analysis ? `${analysis.products.length} products identified` : "Understand your offer" },
-    { title: "Target Audience", icon: "audience", tone: "bg-cyan-100 text-cyan-700", subtitle: "WHO IT’S FOR", description: analysis?.targetAudience[0]?.description.value || "Get closer to the people who need you. Explore needs, challenges, and buying triggers.", count: analysis ? `${analysis.targetAudience.length} audience hypotheses` : "Find your people" },
-    { title: "Future Plans", icon: "growth", tone: "bg-amber-100 text-amber-700", subtitle: "WHERE YOU GO NEXT", description: "Bring your ambition into focus. Add your goals and plan your next moves alongside the research.", count: "Build your next chapter" },
+    { title: "Marketing Plan", icon: "growth", tone: "bg-indigo-50 text-indigo-700 border-indigo-100", subtitle: "BUDGET STRATEGY", description: "Allocate daily & monthly budgets across highest-ROI marketing channels with Gemini 30-day cap modeling.", count: "Build Channel Plan ↗" },
+    { title: "Competitor Search", icon: "competitors", tone: "bg-rose-50 text-rose-700 border-rose-100", subtitle: "MARKET INTELLIGENCE", description: "Discover ten direct competitors with verified domain links, positioning comparisons, and 1-click audit.", count: "Identify Competitors ↗" },
+    { title: "Market Demand", icon: "analytics", tone: "bg-cyan-50 text-cyan-700 border-cyan-100", subtitle: "SEARCH SIGNALS", description: "Explore real-time Google search trends, regional momentum, and seasonal demand trajectories.", count: "Inspect Demand Signals ↗" },
+    { title: "Target Audience", icon: "audience", tone: "bg-violet-50 text-violet-700 border-violet-100", subtitle: "CUSTOMER HYPOTHESES", description: analysis?.targetAudience[0]?.description.value || "Detailed customer personas, pain points, core needs, and high-converting buying triggers.", count: analysis ? `${analysis.targetAudience.length} audience segments` : "Explore Audience ↗" },
+    { title: "Content Strategy", icon: "content", tone: "bg-emerald-50 text-emerald-700 border-emerald-100", subtitle: "SOCIAL & POSTING SCHEDULE", description: "AI-formulated platform priorities, content pillars, ready post ideas, and optimal weekly posting times.", count: "View Posting Schedule ↗" },
   ];
-  return <div className="space-y-6">
-    <section className="relative overflow-hidden rounded-2xl border border-violet-100 bg-linear-to-br from-[#ede9fe] via-[#f4f1ff] to-[#effbff] p-6 sm:p-8">
-      <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-16 h-72 w-72 rounded-full border border-violet-200/60"><div className="absolute inset-7 rounded-full border border-violet-200/60"><div className="absolute inset-7 rounded-full border border-violet-200/60" /></div><span className="absolute bottom-7 left-9 h-4 w-4 rounded-full bg-violet-400/60" /><span className="absolute right-12 top-24 h-3 w-3 rounded-full bg-cyan-400/60" /></div>
-      <div className="relative max-w-xl"><span className="inline-flex rounded-full border border-white bg-white/70 px-3 py-1 text-[10px] font-medium text-violet-700">✦ Your brand, connected</span><h2 className="mt-5 text-2xl font-semibold tracking-tight text-violet-950">{analysis?.company.name.value || "Big ideas start with a clear picture."}</h2><p className="mt-3 text-sm leading-7 text-slate-600">{analysis?.company.summary.value || "One website. A connected view of your product, your audience, and your possibilities. Add your URL above and let’s connect the dots."}</p><button onClick={() => onSelect(analysis ? "Growth Ideas" : "Past Steps")} className="mt-5 inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-violet-500">{analysis ? "Explore growth ideas" : "Shape your brand brief"}<Icon name="arrow" /></button></div>
-    </section>
-    <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">{[
-      { label: "Pages explored", value: job ? String(job.totalPagesScraped) : "—", icon: "sources" },
-      { label: "Products found", value: analysis ? String(analysis.products.length) : "—", icon: "product" },
-      { label: "Audience segments", value: analysis ? String(analysis.targetAudience.length) : "—", icon: "audience" },
-      { label: "Growth opportunities", value: analysis ? String(analysis.marketingOpportunities.length) : "—", icon: "growth" },
-    ].map(stat => <div key={stat.label} className="rounded-xl border border-slate-200 bg-white p-5"><div className="mb-4 flex items-center justify-between"><span className="text-[11px] text-slate-500">{stat.label}</span><span className="text-violet-400"><Icon name={stat.icon} /></span></div><p className="text-3xl font-semibold tracking-tight text-slate-900">{stat.value}</p></div>)}</div>
-    <section><div className="mb-4 flex flex-wrap items-center justify-between gap-2"><h2 className="text-base font-semibold text-slate-900">A little insight. A lot of possibility.</h2><span className="text-[10px] text-slate-400">YOUR BRAND AT A GLANCE</span></div><div className="grid gap-4 md:grid-cols-2">{cards.map(card => <button key={card.title} onClick={() => onSelect(card.title)} className="group rounded-2xl border border-slate-200 bg-white p-6 text-left transition hover:-translate-y-1 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-100/40 motion-reduce:transform-none"><span className={`mb-5 inline-flex rounded-xl p-3 ${card.tone}`}><Icon name={card.icon} className="h-5 w-5" /></span><p className="text-[9px] font-semibold tracking-[.15em] text-slate-400">{card.subtitle}</p><h3 className="mt-2 text-lg font-semibold text-slate-900">{card.title}</h3><p className="mt-3 line-clamp-3 text-xs leading-6 text-slate-500">{card.description}</p><div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-[11px] font-medium text-violet-600">{card.count}<Icon name="arrow" /></div></button>)}</div></section>
-    <section className="rounded-2xl border border-slate-200 bg-white p-6"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-sm font-semibold text-slate-900">Connect the dots.</h2><p className="mt-2 text-xs leading-6 text-slate-500">Research tells the story so far. Your experience shapes what comes next.</p></div><button onClick={() => onSelect("Research Sources")} className="text-xs font-semibold text-violet-600">Explore the evidence ↗</button></div><div className="mt-6 grid gap-3 sm:grid-cols-4">{["Your Product", "Target Audience", "Past Steps", "Future Plans"].map((label, index) => <button key={label} onClick={() => onSelect(label)} className="flex items-center gap-3 rounded-xl border border-violet-100 bg-violet-50/50 p-4 text-left text-xs font-medium text-slate-700"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-[10px] text-violet-600 shadow-sm">0{index + 1}</span>{label}<span className="ml-auto text-violet-400">→</span></button>)}</div></section>
-  </div>;
+
+  return (
+    <div className="space-y-6">
+      <section className="relative overflow-hidden rounded-2xl border border-violet-100 bg-linear-to-br from-[#f5f3ff] via-[#faf5ff] to-[#f0f9ff] p-6 sm:p-8">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-12 h-64 w-64 rounded-full border border-violet-200/50">
+          <div className="absolute inset-6 rounded-full border border-violet-200/40" />
+          <span className="absolute bottom-6 left-8 h-3.5 w-3.5 rounded-full bg-violet-400/50" />
+          <span className="absolute right-10 top-20 h-2.5 w-2.5 rounded-full bg-cyan-400/50" />
+        </div>
+        <div className="relative max-w-2xl">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-white/80 px-3 py-1 text-[10px] font-semibold text-violet-700 shadow-2xs backdrop-blur-xs">
+            ✦ AI Brand Synthesis
+          </span>
+          <h2 className="mt-4 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+            {analysis?.company.name.value || "Strategic Clarity from Website Evidence"}
+          </h2>
+          <p className="mt-2.5 text-xs leading-relaxed text-slate-600 sm:text-sm">
+            {analysis?.company.summary.value || analysis?.positioning.valueProposition.value || "Analyze your website to generate an evidence-backed brand intelligence report, audience hypotheses, competitor landscape, and 30-day marketing plan."}
+          </p>
+          <div className="mt-5 flex flex-wrap items-center gap-2.5">
+            <button onClick={() => onSelect(analysis ? "Marketing Plan" : "Your Product")} className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-violet-700">
+              {analysis ? "View marketing plan" : "Explore analysis"}
+              <Icon name="arrow" className="h-3 w-3" />
+            </button>
+            <button onClick={() => onSelect("Content Strategy")} className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50/80 px-4 py-2 text-xs font-semibold text-violet-700 shadow-2xs transition hover:bg-violet-100">
+              Content & schedule
+            </button>
+            <button onClick={() => onSelect("Competitor Search")} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50">
+              Competitor search
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: "Pages Analyzed", value: job ? String(job.totalPagesScraped) : "0", icon: "sources" },
+          { label: "Products Mapped", value: analysis ? String(analysis.products.length) : "0", icon: "product" },
+          { label: "Audience Segments", value: analysis ? String(analysis.targetAudience.length) : "0", icon: "audience" },
+          { label: "Growth Opportunities", value: analysis ? String(analysis.marketingOpportunities.length) : "0", icon: "growth" },
+        ].map(stat => (
+          <div key={stat.label} className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-2xs">
+            <div className="flex items-center justify-between text-slate-400">
+              <span className="text-[11px] font-medium text-slate-500">{stat.label}</span>
+              <Icon name={stat.icon} className="h-4 w-4 text-violet-500" />
+            </div>
+            <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{stat.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <section>
+        <div className="mb-3.5 flex items-center justify-between">
+          <h3 className="text-sm font-bold text-slate-900">Strategic Intelligence Pillars</h3>
+          <span className="text-[10px] font-semibold tracking-wider text-slate-400">CORE MODULES</span>
+        </div>
+        <div className="grid gap-3.5 sm:grid-cols-2">
+          {cards.map(card => (
+            <button key={card.title} onClick={() => onSelect(card.title)} className="group flex flex-col justify-between rounded-xl border border-slate-200/90 bg-white p-5 text-left shadow-2xs transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md">
+              <div>
+                <div className="mb-3 flex items-center justify-between">
+                  <span className={`inline-flex rounded-lg border p-2 text-xs ${card.tone}`}>
+                    <Icon name={card.icon} className="h-4 w-4" />
+                  </span>
+                  <span className="text-[9px] font-bold tracking-widest text-slate-400">{card.subtitle}</span>
+                </div>
+                <h4 className="text-sm font-bold text-slate-900 group-hover:text-violet-700">{card.title}</h4>
+                <p className="mt-1.5 text-xs leading-relaxed text-slate-500 line-clamp-2">{card.description}</p>
+              </div>
+              <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs font-semibold text-violet-600">
+                <span>{card.count}</span>
+                <span className="transition-transform group-hover:translate-x-0.5">→</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-2xs">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-xs font-bold text-slate-900">Deep Dive Navigation</h3>
+            <p className="text-[11px] text-slate-500">Jump straight into specific research sections</p>
+          </div>
+          <button onClick={() => onSelect("Research Sources")} className="text-xs font-semibold text-violet-700 hover:underline">
+            View crawled sources ({job?.sources?.length ?? 0}) ↗
+          </button>
+        </div>
+        <div className="mt-3.5 grid grid-cols-2 gap-2 sm:grid-cols-5">
+          {["Your Product", "Brand Voice", "Growth Ideas", "Marketing Plan", "Content Strategy"].map(label => (
+            <button key={label} onClick={() => onSelect(label)} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/70 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-violet-50 hover:text-violet-900">
+              <span>{label}</span>
+              <span className="text-slate-400">→</span>
+            </button>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
 }

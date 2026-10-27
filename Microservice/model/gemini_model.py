@@ -1,22 +1,30 @@
 import json
+import logging
+from typing import TypeVar
 
 import httpx
 from pydantic import BaseModel, ValidationError
-from typing import TypeVar
 
 from config.settings import Settings
 from model.gemini_errors import check_provider_response
 from model.gemini_schema import generation_schema
+from model.krutrim_model import generate_with_krutrim
 from prompts.website_analysis import SYSTEM_PROMPT
 from schemas.analysis import Analysis
 from schemas.analysis_input import AnalysisInput
 from utils.exceptions import AnalysisError
 
-
+logger = logging.getLogger(__name__)
 Output = TypeVar("Output", bound=BaseModel)
 
 
-async def generate_structured(payload: BaseModel, output: type[Output], prompt: str, client: httpx.AsyncClient, settings: Settings) -> Output:
+async def generate_with_gemini(
+    payload: BaseModel,
+    output: type[Output],
+    prompt: str,
+    client: httpx.AsyncClient,
+    settings: Settings,
+) -> Output:
     endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.gemini_model}:generateContent"
     schema = generation_schema(output)
     if settings.gemini_model.startswith("gemini-2"):
@@ -25,15 +33,13 @@ async def generate_structured(payload: BaseModel, output: type[Output], prompt: 
     else:
         output_config = {"responseFormat": {"text": {"mimeType": "APPLICATION_JSON", "schema": schema}}}
         thinking_config = {"thinkingLevel": "LOW"}
+
     body = {
         "systemInstruction": {"parts": [{"text": prompt}]},
         "contents": [{"role": "user", "parts": [{"text": payload.model_dump_json()}]}],
-        "generationConfig": {
-            "maxOutputTokens": 8192,
-            "thinkingConfig": thinking_config,
-            **output_config,
-        },
+        "generationConfig": {"maxOutputTokens": 8192, "thinkingConfig": thinking_config, **output_config},
     }
+
     try:
         response = await client.post(endpoint, json=body, headers={"x-goog-api-key": settings.gemini_api_key})
         check_provider_response(response, settings.gemini_model)
@@ -54,6 +60,29 @@ async def generate_structured(payload: BaseModel, output: type[Output], prompt: 
         raise AnalysisError("Cannot connect to Gemini.", 502, "GEMINI_CONNECTION_FAILED") from error
     except (ValidationError, json.JSONDecodeError, IndexError, TypeError, AttributeError) as error:
         raise AnalysisError("Gemini returned invalid structured output.", 502, "GEMINI_INVALID_OUTPUT") from error
+
+
+async def generate_structured(
+    payload: BaseModel,
+    output: type[Output],
+    prompt: str,
+    client: httpx.AsyncClient,
+    settings: Settings,
+) -> Output:
+    if settings.krutrim_api_key:
+        try:
+            print(f"[AI Engine] Using PRIMARY: Krutrim AI ({settings.krutrim_model})", flush=True)
+            res = await generate_with_krutrim(payload, output, prompt, client, settings)
+            print(f"[AI Engine] Krutrim AI successfully generated {output.__name__}", flush=True)
+            return res
+        except Exception as error:
+            logger.warning("Krutrim primary generation failed: %s. Falling back to Gemini secondary.", error)
+            print(f"[AI Engine] Krutrim failed ({error}). Falling back to Gemini ({settings.gemini_model})", flush=True)
+            if not settings.gemini_api_key:
+                raise
+
+    print(f"[AI Engine] Using SECONDARY: Gemini ({settings.gemini_model})", flush=True)
+    return await generate_with_gemini(payload, output, prompt, client, settings)
 
 
 async def analyze_with_gemini(payload: AnalysisInput, client: httpx.AsyncClient, settings: Settings) -> Analysis:

@@ -137,3 +137,126 @@ Adding a dedicated Marketing Plan section and asynchronous owner-scoped API. Use
 Marketing Plan connected across Backend, frontend and Microservice. Added daily/monthly/currency validation, deterministic 30-day cap/minor-unit allocations, model percentage and duplicate-channel validation, zero-budget nonpaid enforcement, optional Trends context, owner-scoped persisted generation and attributed activity. Users can regenerate for changed budgets; one prior successful plan remains available on failure. Backend ownership/CSRF/decimal-budget/state tests passed; Python test fixture import corrected, final suite/build checks pending. Shutdown now drains asynchronous jobs before closing the MongoDB client. No cloud deployment or paid Gemini calls performed.
 
 Budget-based marketing planning complete locally. Verification: all 53 Microservice tests passed (including both-cap arithmetic, fractional amounts, reserve rounding, zero-budget plans, invalid model splits, duplicate channels and private endpoint validation). All 33 Backend tests passed before the final Trends-cache improvement; all three marketing tests then passed after that improvement, with Backend typecheck/build passing. Frontend lint/typecheck/production build passed. The only Python warning is the existing Starlette test-client deprecation. New Trends evidence invalidates same-budget cached plans. Documentation and project memory maintained. No real MongoDB test records, paid Gemini calls, campaign launches or cloud deployment performed. No qualifying Next.js feedback candidates. Existing single-Backend-replica limitation remains.
+
+## Comprehensive UI/UX elevation and architectural component refactoring
+
+User requested a full understanding of the project and an end-to-end UI/UX improvement.
+
+Decisions and changed behavior:
+- Fixed broken navigation mapping where 'Marketing Channels to use' failed to activate 'MarketingPanel' due to a string comparison mismatch in Workspace.tsx. Restored all 12 two-word navigation sections in WorkspaceSidebar.tsx grouped into four clean categories: YOUR RESEARCH, GROWTH & MARKET, YOUR STRATEGY, and YOUR WORKSPACE.
+- Modernized typography in globals.css using system font stack (-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif) with antialiasing and sleek custom scrollbars.
+- Elevated Homepage hero: added 1-click sample website chips (stripe.com, linear.app, notion.so), dynamic brand intelligence dossier preview card (ResearchPreview.tsx) showcasing audience personas, market demand, and budget cap preview, and updated OrbitCapabilities to accurately reflect that Competitor Search, Market Demand (Trends), and Marketing Plan are fully live.
+- Enhanced Workspace & WorkspaceHeader: added dynamic contextual titles and descriptions for every section, clean breadcrumbs, analyzed domain pill, and streamlined URL analysis bar.
+- Refactored MarketingPanel: extracted MarketingBudgetForm and MarketingChannelCard. Added quick budget presets (Zero-Budget, Starter, Growth, Scale), 30-day cap arithmetic helper, approach badges (PAID, ORGANIC, OWNED), and detailed first steps.
+- Refactored MarketPanel: extracted MarketTrendsChart and MarketInsights. Added 1-click suggested search term chips based on crawled product categories, polished SVG search interest timeline, and structured strategic opportunity cards.
+- Refactored CompetitorPanel: extracted CompetitorCard. Added real-time competitor filter search bar, audited status badges, and 1-click deep audit trigger.
+- Upgraded BriefEditor, AnalyticsPanel, HistoryPanel, FindingView, AnalysisProgress, Navbar (with account avatar initial), and Footer.
+- Strict architecture compliance: refactored all components so that 100% of the 48 frontend .tsx files are strictly under the 120-line maximum limit (ranging from 4 to 117 lines).
+- Resolved Next.js 16 Cache Components prerender check in Footer.tsx by replacing dynamic Date instantiation with static year rendering.
+
+Verification run:
+- Frontend: ESLint passed with 0 errors or warnings; Next.js 16 Turbopack production build passed with all 12 routes generated cleanly.
+- Backend: All 34 automated tests in tests/*.test.ts passed cleanly (0 failed).
+- Component size audit verified: max file length is 117 lines.
+- No secrets committed or recorded; no cloud deployment executed.
+## Krutrim AI primary source with Gemini fallback in Microservice
+
+User requested Krutrim AI as primary source and Gemini as secondary fallback when Krutrim is unavailable, utilizing Krutrim API key for analysis.
+
+Decisions and changed behavior:
+- Created Microservice model adapter model/krutrim_model.py connecting to Krutrim Cloud (https://cloud.olakrutrim.com/v1/chat/completions) using OpenAI-compatible chat completions with structured JSON schema enforcement, error handling, and markdown code fence cleaning.
+- Updated config/settings.py and .env.example to support KRUTRIM_API_KEY, KRUTRIM_MODEL (default: Meta-Llama-3.1-70B-Instruct), and KRUTRIM_BASE_URL (https://cloud.olakrutrim.com/v1).
+- Implemented primary-to-secondary fallback in model/gemini_model.py: When KRUTRIM_API_KEY is set, generate_structured automatically routes all analysis, competitor discovery, market demand interpretation, and marketing plan recommendations to Krutrim first. On any Krutrim failure (HTTP error, timeout, network failure, or invalid schema), it logs a warning and seamlessly falls back to Gemini.
+- Preserved existing behavior and test suites when KRUTRIM_API_KEY is not configured.
+- Added comprehensive unit and integration test suite in 	ests/test_krutrim.py covering Krutrim primary success, markdown stripping, settings validation, and Gemini fallback on Krutrim failure.
+- Updated Microservice/docs/ARCHITECTURE.md to document the Krutrim primary adapter and Gemini secondary fallback.
+
+Verification run:
+- Microservice: All 59 tests passed with 0 failures (pytest Microservice/tests).
+- Backend: All 34 automated contract and ownership tests passed (
+pm test in Backend).
+- No API keys, credentials, or private secrets were stored or committed.
+## Krutrim model alignment and process reload
+
+User reported requests were still falling back to Gemini.
+
+Investigation and root causes:
+1. Microservice/.env had KRUTRIM_MODEL=Meta-Llama-3.1-70B-Instruct, which returned 404 from Krutrim Cloud chat completions because it is not in Krutrim's active catalog. Krutrim's active models are gpt-oss-120b, gpt-oss-20b, gemma-4-31b-it, Qwen3.5-9B, etc.
+2. The running Python process on port 8000 (PID 12220) was started at 12:11:08 before the Krutrim code changes and had not reloaded.
+3. Due to the 404 response, the orchestrator caught the error and automatically fell back to Gemini as secondary.
+
+Fixes and verification:
+- Tested live Krutrim models and verified gpt-oss-120b generates full Pydantic structured output with 100% compliance.
+- Updated KRUTRIM_MODEL=gpt-oss-120b in Microservice/.env, Microservice/config/settings.py, and Microservice/.env.example.
+- Terminated stale PID 12220 and restarted Microservice on port 8000 (PID 2724).
+- Sent live HTTP request to http://localhost:8000/api/v1/competitors/suggestions with X-Service-Token: verified Krutrim executed as primary and returned status 200 with 10 competitors without falling back.
+## Krutrim AI full analysis schema normalization and live verification
+
+User reported: When hitting analyses from frontend, Krutrim returned invalid structured output and fell back to Gemini, which threw 402 (payment required/quota exhausted) causing a 503 error.
+
+Investigation & root causes:
+1. Schema Sanitization Mismatch: Opportunity contains evidenceUrls, which caused initial sanitization to treat it as a Finding, stripping required fields (	itle, ationale, priority, suggestedAction) and adding asis/confidence, which triggered Pydantic validation failures.
+2. Token Ceiling: Krutrim completion was limited to 4096 tokens, which risked cutting off large multi-page JSON analyses mid-stream.
+3. Strict Model Constraints: StrictModel enforces extra= forbid, which caused failures if the model returned harmless auxiliary keys or non-standard literal cases.
+4. Error Masking: Detailed Pydantic validation errors were masked by generic error messaging.
+
+Fixes & improvements:
+- Created Microservice/model/krutrim_sanitizer.py:
+  - extract_json_payload: Cleanly strips reasoning blocks (<think>...</think>), markdown wrappers, and extracts parseable JSON substrings.
+  - _is_finding: Accurately identifies Finding classes (asis, confidence, alue) without confusing other models like Opportunity.
+  - sanitize_payload: Recursively strips extra properties to satisfy extra=forbid, normalizes literals (e.g. priority, asis, confidence), cleans and validates HttpUrl strings, and filters evidence URLs against crawled pages.
+- Updated Microservice/model/krutrim_model.py:
+  - Increased max_tokens from 4096 to 8192 (matching Gemini).
+  - Increased timeout to 90.0s for frontier generation.
+  - Integrated extract_json_payload and sanitize_payload.
+  - Added explicit logging of parsing exceptions.
+- Updated Microservice/tests/test_krutrim.py with test coverage for extraction, sanitization, and Pydantic validation.
+- Terminated old Microservice process and started fresh daemon on port 8000.
+
+Verification:
+- Microservice unit/integration tests: 59 passed with 0 failures (pytest Microservice/tests).
+- Live HTTP validation: POST /api/v1/analyses executed against running Microservice at http://127.0.0.1:8000/api/v1/analyses:
+  - Krutrim AI (gpt-oss-120b) generated full Analysis (company profile, products, target audience, marketing opportunities).
+  - HTTP status 200 OK returned with zero Gemini fallback.
+
+## AI Social Media Content & Posting Schedule Strategy Feature
+
+Implemented an end-to-end AI-powered feature across Microservice, Backend, and Frontend to formulate a tailored content strategy, platform recommendations, content pillars with concrete post ideas, magnetic hooks, and an optimal weekly posting schedule based on analyzed business evidence.
+
+### Architecture & Flow:
+1. Microservice:
+   - Added schemas/content.py: strict Pydantic schemas (SocialPlatformRecommendation, ContentPillar, SchedulePost, ContentStrategy, ContentStrategyInput).
+   - Added prompts/content.py: CONTENT_STRATEGY_PROMPT instructing the AI to analyze products, audience personas, and brand voice, and output:
+     - Recommended social platforms (priority, why it fits, posting cadence, best days, peak time windows with behavioral rationale, recommended formats).
+     - Strategic content pillars (name, percentage allocation summing to 100%, objective, formats, concrete example post ideas).
+     - 7-day weekly posting schedule (day, platform, optimal time slot, pillar, content type, tailored topic, magnetic opening hook, CTA).
+     - Tactical growth and engagement tips.
+   - Added service/content.py: calls generate_structured with Krutrim primary and Gemini secondary fallback, normalizes platform deduplication and allocation sums.
+   - Added routes/content.py: POST /api/v1/content/strategy protected by require_service_token.
+   - Registered in main.py under /api/v1/content.
+   - Added automated tests in Microservice/tests/test_content.py.
+
+2. Backend:
+   - Added types/content.ts and updated types/crawler.ts and types/auth.ts (content_strategy_generated activity type).
+   - Added modules/content/content.service.ts: manages background async generation, concurrency locks, caching, error states, and Mongo persistence.
+   - Added modules/content/content.routes.ts: GET /analyses/:id/content-strategy and POST /analyses/:id/content-strategy with CSRF protection, owner scoping, and rate limiting.
+   - Registered createContentService and contentRoutes in Backend/config/application.ts with graceful shutdown.
+   - Added automated test suite in Backend/tests/content.test.ts.
+
+3. Frontend:
+   - Added types/content.ts and API client app/analyze/api/content.ts.
+   - Created app/analyze/components/ContentStrategyPanel.tsx:
+     - Strategic thesis and audience consumption habit cards.
+     - Goal selector (All-Round Growth, Lead Generation, Authority & Trust, Community Engagement).
+     - Action button for generation with polling and loading feedback.
+     - Platform breakdown cards (priority badges, posting cadences, best days, peak posting time windows with rationale, top formats).
+     - Content pillars with percentage allocation bars and tailored post ideas.
+     - 7-day interactive weekly calendar with day filters, time badges, format pills, one-click copyable hooks, and CTAs.
+     - Tactical distribution playbook.
+   - Integrated into Workspace.tsx, WorkspaceSidebar.tsx, WorkspaceHeader.tsx, and WorkspaceOverview.tsx.
+
+### Verification run:
+- Microservice: 61 passed with 0 failures (pytest Microservice/tests).
+- Backend: 36 passed with 0 failures (npm test --prefix Backend).
+- Backend build: tsc passed with 0 errors.
+- Frontend build: next build (Turbopack + TypeScript checks) passed with 0 errors.

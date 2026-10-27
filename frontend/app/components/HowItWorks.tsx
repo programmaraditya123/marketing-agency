@@ -1,12 +1,37 @@
 import Link from "next/link";
+
+const steps = [
+  ["01", "Enter Website Link", "Submit any public website or domain. Orbit automatically maps and crawls up to 8 core pages."],
+  ["02", "AI Evidence Synthesis", "Gemini connects evidence points into positioning, audience hypotheses, competitor landscape, and demand."],
+  ["03", "Actionable 30-Day Roadmap", "Receive channel allocations, daily pacing limits, success metrics, and structured briefs ready to execute."],
+];
+
 export default function HowItWorks() {
-  const steps = [
-    ["01", "Start with a link", "Share your client’s website. We explore their homepage and key product, about and pricing pages."],
-    ["02", "Connect the dots", "AI turns website evidence into a clear picture of the business, its offer and likely audience."],
-    ["03", "Find your next move", "Get a structured brand brief, source links and practical opportunities to guide your marketing."],
-  ];
-  return <section id="how-it-works" className="border-t border-slate-200 py-16">
-    <div className="mb-10 flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs font-semibold tracking-[.2em] text-violet-700">HOW ORBIT WORKS</p><h2 className="mt-3 text-3xl font-semibold tracking-tight text-violet-950">Enter a URL. Get a brand brief.</h2></div><Link href="/how-it-works" className="text-sm font-medium text-violet-700 underline underline-offset-4">See the full process ↗</Link></div>
-    <div className="grid gap-8 md:grid-cols-3">{steps.map(([n, title, text]) => <article key={n} className="border-t border-slate-300 pt-5"><span className="text-sm font-medium text-cyan-700">{n} /</span><h3 className="mt-5 text-lg font-semibold text-violet-950">{title}</h3><p className="mt-2 max-w-sm text-sm leading-7 text-slate-600">{text}</p></article>)}</div>
-  </section>;
+  return (
+    <section id="how-it-works" className="border-t border-slate-200/80 py-16 sm:py-20">
+      <div className="mb-10 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold tracking-[.2em] text-violet-700 uppercase">Automated Intelligence Workflow</p>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+            From raw website to complete strategy.
+          </h2>
+        </div>
+        <Link href="/how-it-works" className="text-xs font-semibold text-violet-700 hover:underline sm:text-sm">
+          Inspect full methodology ↗
+        </Link>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-3">
+        {steps.map(([n, title, text]) => (
+          <article key={n} className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-2xs transition hover:border-violet-200">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 text-xs font-bold text-violet-700">
+              {n}
+            </span>
+            <h3 className="mt-4 text-base font-bold text-slate-900">{title}</h3>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500 sm:text-sm sm:leading-6">{text}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
 }

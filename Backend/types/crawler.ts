@@ -7,6 +7,7 @@ export interface Scrape {
   startUrl: string; pages: ScrapedPage[]; socialLinks: SocialLink[]; warnings: string[];
 }
 export interface CrawlJob {
+  contentStrategy?: import("./content").ContentStrategyState;
   marketingPlan?: import("./marketing").MarketingState;
   marketResearch?: import("./market").MarketResearch;
   userId?: string | null; visitorId?: string | null;
