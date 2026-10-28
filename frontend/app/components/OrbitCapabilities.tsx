@@ -6,7 +6,7 @@ const capabilities = [
   { title: "Discover competitors", description: "AI competitor discovery with domain links, alternative positioning, and 1-click audit.", live: true, symbol: "⇄", path: "/analyze" },
   { title: "Analyze market demand", description: "Track real-world Google search momentum, seasonal spikes, and regional demand patterns.", live: true, symbol: "⌁", path: "/analyze" },
   { title: "Budget & channel plan", description: "Model daily & monthly budgets across highest-ROI marketing channels with 30-day cap arithmetic.", live: true, symbol: "▤", path: "/analyze" },
-  { title: "Creative prompts & posters", description: "Turn research insights into high-converting ad copy, visual hooks, and campaign banners.", live: false, symbol: "✧", path: "#" },
+  { title: "SEO & Keyword War Room", description: "Compare metadata & keywords against competitors to see why you lack organic reach, and get ready-to-deploy ranking tags.", live: true, symbol: "⌖", path: "/analyze" },
 ];
 
 export default function OrbitCapabilities() {

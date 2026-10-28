@@ -8,6 +8,7 @@ const sectionMeta: Record<string, { title: string; subtitle: string }> = {
   "Brand Voice": { title: "Brand Voice & Positioning", subtitle: "Brand tone, differentiation points, and core messaging architecture." },
   "Marketing Plan": { title: "Budget & Channel Strategy", subtitle: "Gemini-powered channel allocations and 30-day budget optimization." },
   "Competitor Search": { title: "Competitor Intelligence", subtitle: "AI-identified competitors in your orbit with 1-click deep research." },
+  "SEO Comparison": { title: "SEO Keyword & Metadata War Room", subtitle: "Head-to-head competitive metadata audit, keyword gap matrix, and ready-to-deploy ranking tags." },
   "Market Demand": { title: "Search Trends & Demand Signals", subtitle: "Historical search interest patterns and seasonal demand intelligence." },
   "Growth Ideas": { title: "Strategic Growth Opportunities", subtitle: "High-impact marketing actions and prioritized experimentation paths." },
   "Content Strategy": { title: "Social Content & Posting Strategy", subtitle: "AI-formulated platform recommendations, content formats, and optimal posting schedule tailored to your business." },

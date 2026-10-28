@@ -4,6 +4,7 @@ import Icon from "./WorkspaceIcon";
 export default function WorkspaceOverview({ job, onSelect }: { job: AnalysisJob | null; onSelect: (value: string) => void }) {
   const analysis = job?.status === "completed" ? job.analysis : undefined;
   const cards = [
+    { title: "SEO Comparison", icon: "seo", tone: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100", subtitle: "PRIMARY USP", description: "Head-to-head competitor SEO & keyword gap comparison with ready-to-deploy ranking metadata.", count: "Open SEO War Room ↗" },
     { title: "Marketing Plan", icon: "growth", tone: "bg-indigo-50 text-indigo-700 border-indigo-100", subtitle: "BUDGET STRATEGY", description: "Allocate daily & monthly budgets across highest-ROI marketing channels with Gemini 30-day cap modeling.", count: "Build Channel Plan ↗" },
     { title: "Competitor Search", icon: "competitors", tone: "bg-rose-50 text-rose-700 border-rose-100", subtitle: "MARKET INTELLIGENCE", description: "Discover ten direct competitors with verified domain links, positioning comparisons, and 1-click audit.", count: "Identify Competitors ↗" },
     { title: "Market Demand", icon: "analytics", tone: "bg-cyan-50 text-cyan-700 border-cyan-100", subtitle: "SEARCH SIGNALS", description: "Explore real-time Google search trends, regional momentum, and seasonal demand trajectories.", count: "Inspect Demand Signals ↗" },

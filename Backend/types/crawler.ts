@@ -8,6 +8,7 @@ export interface Scrape {
 }
 export interface CrawlJob {
   contentStrategy?: import("./content").ContentStrategyState;
+  seoComparison?: import("./seo").SeoComparisonState;
   marketingPlan?: import("./marketing").MarketingState;
   marketResearch?: import("./market").MarketResearch;
   userId?: string | null; visitorId?: string | null;

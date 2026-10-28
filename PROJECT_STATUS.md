@@ -38,7 +38,7 @@ User explicitly requested this file, ongoing maintenance, platform port variable
 - Microservice AppSail service: `market-agency`, Python 3.10, dependencies supplied under `packages/`.
 - Port contract: `X_ZOHO_CATALYST_LISTEN_PORT` takes priority over `PORT`; bind to `0.0.0.0`. Local defaults: Backend 9000, Microservice 8000.
 - Corrected Backend app-config key from `buildPath` to Catalyst's `build_path`.
-- Added Microservice `server.py`: platform port, then PORT, then local 8000; validates 1–65535 and binds to 0.0.0.0. Its AppSail command uses this entry point with vendored packages.
+- Added Microservice `server.py`: platform port, then PORT, then local 8000; validates 1â€“65535 and binds to 0.0.0.0. Its AppSail command uses this entry point with vendored packages.
 - Added/expanded `.catalystignore` files to exclude secrets, tests, docs, caches and temporary artifacts. Linux Python 3.10 dependency binaries already exist under Microservice/packages.
 - Verified this task: Backend typecheck, all 18 tests and build passed; Microservice all 26 tests passed (one existing Starlette/httpx deprecation warning).
 - Initial restricted deployment failed on credential refresh (EACCES/EPERM); the network-enabled retry authenticated successfully. No user re-login was needed.
@@ -62,7 +62,7 @@ User explicitly requested this file, ongoing maintenance, platform port variable
 - Added `--cors-only` to the deployment configuration helper: reads existing cloud settings and changes only origin lists, preserving credentials/settings without reading local secrets. Applied to both Development services; local ignored .env files and examples match.
 - Checks passed: Backend typecheck, 19 tests and build; Microservice 28 tests. Regression coverage includes exact Orbit origin, credentials/headers, rejected lookalike domains, auth-error CORS headers, and trailing-slash normalization.
 - Both redeployments succeeded: Catalyst reported DEPLOYMENT SUCCESSFUL for market-agency and market-agency-backend. Final live GET /health responses on both services return 200 and one Access-Control-Allow-Origin: https://orbit.vidorahub.com plus Access-Control-Allow-Credentials: true. Backend /ready also returns 200.
-- Additional blocker: Catalyst's ZGS gateway answers OPTIONS preflights with 200 and no CORS headers before the apps handle them. Official documentation requires Authorized Domains CORS to be enabled for the frontend. The installed CLI has no such operation; plugin discovery found no Catalyst connector. Read-only API metadata probes did not expose the setting. Asked the user to add/enable https://orbit.vidorahub.com in Development → Authentication → Whitelisting → Authorized Domains; awaiting response.
+- Additional blocker: Catalyst's ZGS gateway answers OPTIONS preflights with 200 and no CORS headers before the apps handle them. Official documentation requires Authorized Domains CORS to be enabled for the frontend. The installed CLI has no such operation; plugin discovery found no Catalyst connector. Read-only API metadata probes did not expose the setting. Asked the user to add/enable https://orbit.vidorahub.com in Development â†’ Authentication â†’ Whitelisting â†’ Authorized Domains; awaiting response.
 - The public Orbit frontend is reachable and its JavaScript uses the correct deployed Development Backend /api/v1 URL. Frontend API configuration is not the cause found here.
 - After the gateway setting is enabled, recheck preflights and normal response headers on both services. Official Catalyst guidance warns of duplicate headers if platform and app middleware both inject CORS; if observed, use platform-managed CORS in deployment while retaining local CORS and Backend CSRF checks.
 - Final verification still finds gateway OPTIONS responses with HTTP 200 and no allow-origin/credentials headers on both URLs. The browser issue is NOT fully resolved until the external Authorized Domains setting is enabled. User action question is pending; do not claim successful browser CORS based only on normal GET responses.
@@ -73,7 +73,7 @@ User explicitly requested this file, ongoing maintenance, platform port variable
 - Platform-only test result: deployed Microservice stopped adding normal-response CORS headers, but OPTIONS still had no CORS headers. Restored CORS_MANAGED_BY_CATALYST=false on both services. Credentials and authentication were preserved. Microservice compatibility deployment succeeded; Backend compatibility deployment remains pending upload completion.
 - Both compatibility deployments subsequently completed successfully. App-managed CORS is restored on both services; the platform-only experiment did not resolve the gateway preflight issue. Do not repeat redeployments without new evidence about the gateway rule. Final suites: Backend 20 tests passed; Microservice 29 passed. Backend health/readiness remain 200 and invalid JWTs return 401 with the exact Orbit CORS origin header.
 - User supplied the failing Backend /api/v1/auth/me URL and Referrer Policy; neither is misconfigured. Exact Authorized Domains entry/environment still unknown. A screenshot or exact entry/environment is needed to inspect the existing rule rather than assume it is missing. Full reproduction and remaining evidence are recorded in docs/CORS_DIAGNOSTICS.md.
-- Latest screenshot shows Backend AppSail → Configuration → Environment Variables. It confirms CORS_ORIGINS is `http://localhost:3000,https://orbit.vidorahub.com`, but does not show Catalyst's separate Authorized Domains page, environment selector or gateway CORS toggle. Do not store other screenshot environment values here. Rechecked live: normal Backend GET /health has the exact origin and credentials headers; OPTIONS /api/v1/auth/me still returns 200 without them. Next action remains inspection/configuration of project-level Cloud Scale → Authentication → Whitelisting → Authorized Domains in Development, outside the AppSail service Configuration page.
+- Latest screenshot shows Backend AppSail â†’ Configuration â†’ Environment Variables. It confirms CORS_ORIGINS is `http://localhost:3000,https://orbit.vidorahub.com`, but does not show Catalyst's separate Authorized Domains page, environment selector or gateway CORS toggle. Do not store other screenshot environment values here. Rechecked live: normal Backend GET /health has the exact origin and credentials headers; OPTIONS /api/v1/auth/me still returns 200 without them. Next action remains inspection/configuration of project-level Cloud Scale â†’ Authentication â†’ Whitelisting â†’ Authorized Domains in Development, outside the AppSail service Configuration page.
 
 ## Known limitations and follow-up
 
@@ -120,16 +120,21 @@ Persistent identity implementation connected: reports, activity and sessions now
 
 Verification complete for persistent identity/history: all 29 Backend tests passed plus typecheck/build; frontend lint/typecheck/production build passed, and all three frontend tests passed (persistent visitor creation/canonicalization, SSR/blocked-storage fallback, and real Next proxy forwarding both session and visitor Set-Cookie headers). Security tests cover copied IDs, visitor-token/account-token separation, expired-session recovery, signup and multi-device account mapping, private history after logout, legacy session upgrade, and stable pagination through 103 tied-timestamp records without duplicates or cross-owner leakage. Local source watchers remain in place; no cloud deployment, real website/Gemini request or global migration was run. Historical records are attributed on verified legacy-session binding/login; previously unknown visitor origins cannot be reconstructed. Existing session/activity retention and single-process nontransactional linking limitations remain documented. No qualifying Next.js feedback issue arose during this task.
 
-### Google Trends market demand research � in progress
+### Google Trends market demand research — in progress
 Adding bounded pytrends collection, owner-scoped asynchronous market research, Mongo raw evidence persisted before Gemini and interpretation afterward, and a Market Demand workspace panel. Defaults: worldwide, past 12 months; editable product terms. Trends are relative search interest, not sales volume. pytrends is archived, so provider failures must remain explicit and collected evidence preserved. No cloud deployment requested for this feature.
+
 
 Market workflow connected across all three apps. Raw trends and interpretation are embedded on the owner-scoped website report, preserving parent visitorId/userId and existing login history mapping. Added deterministic earlier/recent half-period metrics and business context for Gemini. Collected evidence survives failed interpretation/restart and is reused on retry; completed datasets are cached. Initial new persistence/retry/ownership test passed, plus all existing 29 Backend and 43 Microservice tests before final metric changes. Frontend lint issue was corrected. Final verification and live Trends connectivity pending.
 
+
 Live public Trends collection returned TRENDS_UNAVAILABLE; no real Google dataset or Gemini demand report is claimed. Running a sanitized diagnostic to distinguish Google rate limits from connectivity/dependency errors. All 30 Backend tests and all 43 Microservice tests passed after metrics/business-context changes; frontend lint passed and production build is running. NumPy was aligned to 2.2.6 for Python 3.10/pandas compatibility with existing tools; Linux wheels installed and Windows-only local packages excluded from AppSail uploads.
+
 
 Follow-up live collection succeeded with 52 complete periods for a public product-category term. The initial failure was transient; no definitive HTTP cause was established. This verifies real pytrends collection connectivity locally, not guaranteed Google availability on Catalyst. No MongoDB test records were written and no paid Gemini request was made. Backend typecheck/build and all 30 tests passed; frontend lint/typecheck/production build passed; 43 Python tests passed with NumPy 2.2.6. Final private collection/interpretation contract test and small input-normalization checks remain. No qualifying Next.js feedback issue arose.
 
+
 Google Trends feature complete locally. Final verification: existing Backend suite (30 tests) passed, then both market service/API tests passed after final normalization changes; Backend typecheck/build passed. All 44 Microservice tests passed, including private collection validation and a mocked Gemini round-trip asserting the exact collected evidence reaches the model. Frontend lint/typecheck/production build passed. Live pytrends collection returned 52 complete periods on the follow-up attempt; first attempt failed transiently. Evidence, deterministic metrics and interpretation remain private and inherit report ownership; market research activity includes userId/visitorId. PROJECT_STATUS and all app architecture docs plus root usage/API notes updated. No real MongoDB research/test records or paid Gemini calls were created, and no cloud deployment was performed. Remaining operational limitations: archived/unofficial Google integration can fail or rate limit; Catalyst live connectivity is unverified, one Backend replica is supported, and each report retains one fixed completed research configuration. Existing Starlette test-client deprecation warning remains. No Next.js feedback candidates.
+
 
 ### Budget-based marketing channels ? in progress
 Adding a dedicated Marketing Plan section and asynchronous owner-scoped API. Users enter daily/monthly budgets and currency; Gemini receives saved product/audience and optional Trends evidence, recommends channels, timing, rationale and validation steps. Deterministic minor-unit allocation enforces both caps over a documented 30-day planning window, supports zero-budget organic plans, and preserves the last successful plan during regeneration. No campaigns are launched and no deployment requested.
@@ -195,7 +200,8 @@ Fixes and verification:
 User reported: When hitting analyses from frontend, Krutrim returned invalid structured output and fell back to Gemini, which threw 402 (payment required/quota exhausted) causing a 503 error.
 
 Investigation & root causes:
-1. Schema Sanitization Mismatch: Opportunity contains evidenceUrls, which caused initial sanitization to treat it as a Finding, stripping required fields (	itle, ationale, priority, suggestedAction) and adding asis/confidence, which triggered Pydantic validation failures.
+1. Schema Sanitization Mismatch: Opportunity contains evidenceUrls, which caused initial sanitization to treat it as a Finding, stripping required fields (	itle, 
+ationale, priority, suggestedAction) and adding asis/confidence, which triggered Pydantic validation failures.
 2. Token Ceiling: Krutrim completion was limited to 4096 tokens, which risked cutting off large multi-page JSON analyses mid-stream.
 3. Strict Model Constraints: StrictModel enforces extra= forbid, which caused failures if the model returned harmless auxiliary keys or non-standard literal cases.
 4. Error Masking: Detailed Pydantic validation errors were masked by generic error messaging.
@@ -219,44 +225,125 @@ Verification:
   - Krutrim AI (gpt-oss-120b) generated full Analysis (company profile, products, target audience, marketing opportunities).
   - HTTP status 200 OK returned with zero Gemini fallback.
 
+
+
 ## AI Social Media Content & Posting Schedule Strategy Feature
+
+
 
 Implemented an end-to-end AI-powered feature across Microservice, Backend, and Frontend to formulate a tailored content strategy, platform recommendations, content pillars with concrete post ideas, magnetic hooks, and an optimal weekly posting schedule based on analyzed business evidence.
 
+
+
 ### Architecture & Flow:
+
 1. Microservice:
+
    - Added schemas/content.py: strict Pydantic schemas (SocialPlatformRecommendation, ContentPillar, SchedulePost, ContentStrategy, ContentStrategyInput).
+
    - Added prompts/content.py: CONTENT_STRATEGY_PROMPT instructing the AI to analyze products, audience personas, and brand voice, and output:
+
      - Recommended social platforms (priority, why it fits, posting cadence, best days, peak time windows with behavioral rationale, recommended formats).
+
      - Strategic content pillars (name, percentage allocation summing to 100%, objective, formats, concrete example post ideas).
+
      - 7-day weekly posting schedule (day, platform, optimal time slot, pillar, content type, tailored topic, magnetic opening hook, CTA).
+
      - Tactical growth and engagement tips.
+
    - Added service/content.py: calls generate_structured with Krutrim primary and Gemini secondary fallback, normalizes platform deduplication and allocation sums.
+
    - Added routes/content.py: POST /api/v1/content/strategy protected by require_service_token.
+
    - Registered in main.py under /api/v1/content.
+
    - Added automated tests in Microservice/tests/test_content.py.
 
+
+
 2. Backend:
+
    - Added types/content.ts and updated types/crawler.ts and types/auth.ts (content_strategy_generated activity type).
+
    - Added modules/content/content.service.ts: manages background async generation, concurrency locks, caching, error states, and Mongo persistence.
+
    - Added modules/content/content.routes.ts: GET /analyses/:id/content-strategy and POST /analyses/:id/content-strategy with CSRF protection, owner scoping, and rate limiting.
+
    - Registered createContentService and contentRoutes in Backend/config/application.ts with graceful shutdown.
+
    - Added automated test suite in Backend/tests/content.test.ts.
 
+
+
 3. Frontend:
+
    - Added types/content.ts and API client app/analyze/api/content.ts.
+
    - Created app/analyze/components/ContentStrategyPanel.tsx:
+
      - Strategic thesis and audience consumption habit cards.
+
      - Goal selector (All-Round Growth, Lead Generation, Authority & Trust, Community Engagement).
+
      - Action button for generation with polling and loading feedback.
+
      - Platform breakdown cards (priority badges, posting cadences, best days, peak posting time windows with rationale, top formats).
+
      - Content pillars with percentage allocation bars and tailored post ideas.
+
      - 7-day interactive weekly calendar with day filters, time badges, format pills, one-click copyable hooks, and CTAs.
+
      - Tactical distribution playbook.
+
    - Integrated into Workspace.tsx, WorkspaceSidebar.tsx, WorkspaceHeader.tsx, and WorkspaceOverview.tsx.
 
+
+
 ### Verification run:
+
 - Microservice: 61 passed with 0 failures (pytest Microservice/tests).
+
 - Backend: 36 passed with 0 failures (npm test --prefix Backend).
+
 - Backend build: tsc passed with 0 errors.
+
 - Frontend build: next build (Turbopack + TypeScript checks) passed with 0 errors.
+
+## Head-to-Head Competitor SEO & Keyword Gap War Room (Primary USP)
+
+User requested a new flagship USP feature to analyze both client website and competitor websites, compare keywords and metadata side-by-side, explain specifically why the client's website lacks search reach compared to the competitor, and provide winning competitor keywords & SEO metadata with ready-to-deploy snippets so the client can rank #1 organically on Google.
+
+### Architecture & Implementation:
+1. Microservice:
+   - Added schemas/seo.py: strict Pydantic schemas (WebsiteSeoSummary, SeoGapFactor, KeywordGapItem, ContentInjectionRecommendation, CopyableMetadata, ActionStep, SeoComparisonResult, WebsiteSeoInput, SeoComparisonInput).
+   - Added prompts/seo.py: SEO_COMPARISON_PROMPT instructing the AI to conduct head-to-head title/meta description/H1-H2 click psychology evaluation, detect high-intent keywords, formulate root-cause diagnosis of why the client lacks search presence, build a Keyword Gap Matrix, generate winning titles/descriptions/H1-H2 outlines, provide section-by-section copy injection blueprints, generate copyable HTML/JSON-LD/Next.js snippets, and establish chronological action steps.
+   - Added service/seo.py: calls generate_structured with Krutrim primary and Gemini secondary fallback, validates score bounds, and deduplicates keywords.
+   - Added routes/seo.py: POST /api/v1/seo/compare protected by require_service_token.
+   - Registered in main.py under /api/v1/seo.
+   - Added automated test suite in Microservice/tests/test_seo.py covering route auth, Gemini generation, and Krutrim primary execution.
+
+2. Backend:
+   - Added types/seo.ts and updated types/crawler.ts (seoComparison state on CrawlJob) and types/auth.ts (seo_comparison_generated activity).
+   - Added modules/seo/seo.extract.ts: HTML & scraped-page metadata extraction (title, description, meta keywords, canonical, openGraph, H1-H3 headings, Schema.org JSON-LD types, body text snippet).
+   - Added modules/seo/seo.service.ts: manages background comparison generation, competitor fetching (utilizes existing audited competitor child crawls or fetches competitor HTML directly), client SEO extraction, Microservice API calls, Mongo persistence with multi-competitor comparison caching (savedComparisons), and activity recording.
+   - Added modules/seo/seo.routes.ts: GET /analyses/:id/seo-comparison and POST /analyses/:id/seo-comparison with CSRF protection, rate limiting, and owner isolation.
+   - Registered createSeoService and seoRoutes in Backend/config/application.ts with graceful shutdown.
+   - Added automated test suite in Backend/tests/seo.test.ts testing CSRF, identity scoping, provider failure handling, and caching.
+
+3. Frontend:
+   - Added types/seo.ts, api/seo.ts, and custom React hook hooks/useSeoComparison.ts.
+   - Created 7 modular components all strictly under the 120-line architecture limit:
+     - SeoComparisonPanel.tsx (115 lines): war room container, competitor URL input, discovered competitor quick chips, saved audit switcher, status states.
+     - SeoScorecard.tsx (79 lines): side-by-side SEO health score, character counts, Title/Description/H1/Schema evaluation.
+     - SeoDiagnosisCard.tsx (62 lines): 'Why Your Website Lacks Compared to Competitor' root cause diagnosis, organic upside score (+X%), gap factor badges.
+     - SeoKeywordGapTable.tsx (81 lines): Keyword Gap Matrix table with search intent, impact, client status, and buyer traffic rationale.
+     - SeoRecommendationCard.tsx (99 lines): Recommended Title, Meta Description, H1 & H2 topical structure, target keyword pills, section-by-section content injection plan.
+     - SeoCopyableSnippet.tsx (67 lines): 1-click Copyable code snippets for HTML head, Schema JSON-LD script, and Next.js Metadata object.
+     - SeoActionPlan.tsx (31 lines): Chronological top action steps to outrank competitor on Google.
+   - Integrated into WorkspaceSidebar.tsx (two-word label 'SEO Comparison'), WorkspaceIcon.tsx, WorkspaceHeader.tsx, Workspace.tsx, CompetitorCard.tsx (1-click 'Compare SEO & Keywords' button), WorkspaceOverview.tsx, and OrbitCapabilities.tsx.
+
+### Verification run:
+- Microservice: 64 passed with 0 failures (pytest Microservice/tests).
+- Backend: 38 passed with 0 failures (npm test --prefix Backend); tsc typecheck passed with 0 errors; tsc build passed.
+- Frontend: ESLint passed with 0 errors; Next.js 16 Turbopack production build (next build) passed with all 12 routes generated. All 7 new frontend components strictly under the 120-line maximum limit.
+- No secrets committed or recorded; no unrequested cloud deployment executed.

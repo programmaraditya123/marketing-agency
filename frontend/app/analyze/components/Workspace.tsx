@@ -14,6 +14,7 @@ import CompetitorPanel from "./CompetitorPanel";
 import MarketPanel from "./MarketPanel";
 import MarketingPanel from "./MarketingPanel";
 import ContentStrategyPanel from "./ContentStrategyPanel";
+import SeoComparisonPanel from "./SeoComparisonPanel";
 import { trackSection } from "../api/workspace";
 import { useAuth } from "@/components/auth/AuthProvider";
 
@@ -23,6 +24,7 @@ export default function Workspace({ initialId, initialWebsite, initialSection }:
   const { job, error, submit, loading, busy, updateBrief } = useAnalysis(initialId);
   const [active, setActive] = useState(initialSection || "Brand Overview");
   const [website, setWebsite] = useState(initialWebsite || "");
+  const [targetCompetitor, setTargetCompetitor] = useState("");
   const [trackingError, setTrackingError] = useState("");
   const started = useRef(false), lastViewed = useRef("");
 
@@ -67,7 +69,8 @@ export default function Workspace({ initialId, initialWebsite, initialSection }:
           : active === "Past Steps" || active === "Future Plans" ? <BriefEditor key={job?.id || "empty"} job={job} focus={active} onSaved={updateBrief} />
           : active === "Marketing Plan" ? <MarketingPanel key={`${job?.id}:${job?.status}`} job={job} />
           : active === "Market Demand" ? <MarketPanel key={`${job?.id}:${job?.status}`} job={job} />
-          : active === "Competitor Search" ? <CompetitorPanel job={job} />
+          : active === "Competitor Search" ? <CompetitorPanel job={job} onCompareSeo={(url) => { setTargetCompetitor(url); setActive("SEO Comparison"); }} />
+          : active === "SEO Comparison" ? <SeoComparisonPanel key={`${job?.id}:${job?.status}`} job={job} initialCompetitor={targetCompetitor} />
           : active === "Content Strategy" || active === "Content Themes" ? <ContentStrategyPanel key={`${job?.id}:${job?.status}`} job={job} />
           : active === "Brand Overview" ? <WorkspaceOverview job={job} onSelect={setActive} />
           : <ResearchPanel key={`${job?.id}:${active}`} section={active} job={job} />}

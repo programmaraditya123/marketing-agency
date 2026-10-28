@@ -8,6 +8,7 @@ from routes.competitors import router as competitors_router
 from routes.market import router as market_router
 from routes.marketing import router as marketing_router
 from routes.content import router as content_router
+from routes.seo import router as seo_router
 from utils.exceptions import register_exception_handlers
 
 app = FastAPI(title="Marketing Agency Analysis", version="1.0.0", lifespan=lifespan)
@@ -19,3 +20,4 @@ app.include_router(competitors_router, prefix="/api/v1/competitors", tags=["Comp
 app.include_router(market_router, prefix="/api/v1/market", tags=["Market research"])
 app.include_router(marketing_router, prefix="/api/v1/marketing", tags=["Marketing plan"])
 app.include_router(content_router, prefix="/api/v1/content", tags=["Content strategy"])
+app.include_router(seo_router, prefix="/api/v1/seo", tags=["SEO Comparison"])

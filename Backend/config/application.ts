@@ -19,6 +19,8 @@ import { createMarketingService } from "../modules/marketing/marketing.service";
 import marketingRoutes from "../modules/marketing/marketing.routes";
 import { createContentService } from "../modules/content/content.service";
 import contentRoutes from "../modules/content/content.routes";
+import { createSeoService } from "../modules/seo/seo.service";
+import seoRoutes from "../modules/seo/seo.routes";
 export async function buildApplication(env: Environment) {
   const app = Fastify({ bodyLimit: 8192, logger: { redact: ["req.headers.authorization", "req.headers.cookie", "res.headers['set-cookie']", "req.body.password"] } });
   try {
@@ -33,8 +35,9 @@ export async function buildApplication(env: Environment) {
     const market = createMarketService(createRepository(database.jobs), env, workspace);
     const marketing = createMarketingService(createRepository(database.jobs), env, workspace);
     const content = createContentService(createRepository(database.jobs), env, workspace);
+    const seo = createSeoService(createRepository(database.jobs), env, workspace, app.log);
     app.addHook("onClose", async () => {
-      await Promise.allSettled([content.close(), marketing.close(), market.close(), competitors.close()]);
+      await Promise.allSettled([seo.close(), content.close(), marketing.close(), market.close(), competitors.close()]);
       await service.close(); await database.client.close();
     });
     await registerRoutes(app, service, async () => { await database.client.db().command({ ping: 1 }); }, { auth, workspace, env });
@@ -42,6 +45,7 @@ export async function buildApplication(env: Environment) {
     await app.register(marketRoutes, { prefix: "/api/v1", service: market });
     await app.register(marketingRoutes, { prefix: "/api/v1", service: marketing });
     await app.register(contentRoutes, { prefix: "/api/v1", service: content });
+    await app.register(seoRoutes, { prefix: "/api/v1", service: seo });
     return app;
   } catch (error) { await app.close(); throw error; }
 }

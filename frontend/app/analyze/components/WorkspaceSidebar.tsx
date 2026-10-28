@@ -9,6 +9,7 @@ export const sections = [
   { label: "Brand Voice", icon: "voice" },
   { label: "Marketing Plan", icon: "growth", group: "GROWTH & MARKET" },
   { label: "Competitor Search", icon: "competitors" },
+  { label: "SEO Comparison", icon: "seo" },
   { label: "Market Demand", icon: "analytics" },
   { label: "Growth Ideas", icon: "growth" },
   { label: "Content Strategy", icon: "content" },

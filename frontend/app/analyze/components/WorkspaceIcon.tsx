@@ -7,6 +7,7 @@ export default function WorkspaceIcon({ name, className = "h-4 w-4" }: { name: s
     voice: "M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z",
     past: "M3 12a9 9 0 1 0 2.7-6.4L3 8M3 3v5h5M12 7v5l3 2", future: "M12 19V5M5 12l7-7 7 7",
     growth: "m3 17 6-6 4 4 8-10M15 5h6v6",
+    seo: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7",
     content: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6ZM14 2v6h6M8 13h8M8 17h6",
     analytics: "M3 3v18h18M7 14v3M12 9v8M17 5v12", sources: "M10 13a5 5 0 0 0 7 .5l3-3a5 5 0 0 0-7-7l-2 2M14 11a5 5 0 0 0-7-.5l-3 3a5 5 0 0 0 7 7l2-2",
     history: "M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm5 12 6 6", activity: "M3 12h4l3-8 4 16 3-8h4",

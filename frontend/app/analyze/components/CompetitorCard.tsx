@@ -5,11 +5,13 @@ export default function CompetitorCard({
   idx,
   opening,
   onOpen,
+  onCompareSeo,
 }: {
   c: { id: string; title: string; domain: string; url: string; description: string; analysisId?: string };
   idx: number;
   opening: string;
   onOpen: (id: string) => void;
+  onCompareSeo?: (url: string) => void;
 }) {
   return (
     <article className="flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-5 shadow-2xs transition hover:shadow-xs hover:border-violet-200">
@@ -35,13 +37,21 @@ export default function CompetitorCard({
         <p className="mt-3 text-xs leading-relaxed text-slate-600 line-clamp-3">{c.description}</p>
       </div>
 
-      <div className="mt-4 border-t border-slate-100 pt-3">
+      <div className="mt-4 flex flex-col gap-1.5 border-t border-slate-100 pt-3">
+        {onCompareSeo && (
+          <button
+            onClick={() => onCompareSeo(c.url)}
+            className="w-full rounded-xl border border-violet-200 bg-violet-50/70 py-1.5 text-center text-xs font-semibold text-violet-700 transition hover:bg-violet-100"
+          >
+            Compare SEO & Keywords ↗
+          </button>
+        )}
         {c.analysisId ? (
-          <Link href={`/analyze?id=${c.analysisId}`} className="block w-full rounded-xl border border-violet-200 bg-violet-50/50 py-2 text-center text-xs font-semibold text-violet-700 transition hover:bg-violet-100">
+          <Link href={`/analyze?id=${c.analysisId}`} className="block w-full rounded-xl border border-slate-200 py-1.5 text-center text-xs font-semibold text-slate-700 transition hover:bg-slate-50">
             Open Competitor Audit ↗
           </Link>
         ) : (
-          <button disabled={!!opening} onClick={() => onOpen(c.id)} className="w-full rounded-xl border border-slate-200 py-2 text-center text-xs font-semibold text-slate-700 transition hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 disabled:opacity-50">
+          <button disabled={!!opening} onClick={() => onOpen(c.id)} className="w-full rounded-xl border border-slate-200 py-1.5 text-center text-xs font-semibold text-slate-700 transition hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 disabled:opacity-50">
             {opening === c.id ? "Launching audit…" : "Deep Audit Competitor ↗"}
           </button>
         )}

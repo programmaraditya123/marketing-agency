@@ -6,7 +6,7 @@ import { analyzeCompetitor } from "../api/competitors";
 import type { AnalysisJob } from "@/types/analysis";
 import CompetitorCard from "./CompetitorCard";
 
-function CompetitorSearch({ id }: { id: string }) {
+function CompetitorSearch({ id, onCompareSeo }: { id: string; onCompareSeo?: (url: string) => void }) {
   const { data, loading, error, busy, start, reconnect } = useCompetitors(id);
   const [opening, setOpening] = useState(""), [detailError, setDetailError] = useState("");
   const [filter, setFilter] = useState("");
@@ -74,7 +74,7 @@ function CompetitorSearch({ id }: { id: string }) {
 
           <div className="grid gap-4 sm:grid-cols-2">
             {results.map((c, idx) => (
-              <CompetitorCard key={c.id} c={c} idx={idx} opening={opening} onOpen={open} />
+              <CompetitorCard key={c.id} c={c} idx={idx} opening={opening} onOpen={open} onCompareSeo={onCompareSeo} />
             ))}
           </div>
         </>
@@ -83,7 +83,7 @@ function CompetitorSearch({ id }: { id: string }) {
   );
 }
 
-export default function CompetitorPanel({ job }: { job: AnalysisJob | null }) {
+export default function CompetitorPanel({ job, onCompareSeo }: { job: AnalysisJob | null; onCompareSeo?: (url: string) => void }) {
   if (!job || job.status !== "completed") {
     return (
       <div className="rounded-2xl border border-dashed border-violet-200 bg-white p-10 text-center">
@@ -92,5 +92,5 @@ export default function CompetitorPanel({ job }: { job: AnalysisJob | null }) {
       </div>
     );
   }
-  return <CompetitorSearch key={job.id} id={job.id} />;
+  return <CompetitorSearch key={job.id} id={job.id} onCompareSeo={onCompareSeo} />;
 }
