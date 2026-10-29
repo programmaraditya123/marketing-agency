@@ -53,6 +53,37 @@ export function createCrawlService(repository: Pick<CrawlRepository, "get" | "in
         totalPagesScraped: job.scrape?.pages.length || 0, socialLinks: job.scrape?.socialLinks || [],
         sources: job.scrape?.pages.map(({ url, title }) => ({ url, title })) || [], warnings: job.scrape?.warnings || [] };
     },
+    async retry(id: string, ownerId?: string) {
+      const job = await repository.get(id);
+      if (ownerId && job.ownerId !== ownerId) throw new AppError(404, "Analysis not found.");
+      if (job.status === "completed") return { id: job._id, status: "completed" as const };
+      if (stopping) throw new AppError(503, "The service is shutting down. Please try again shortly.");
+      if (active.size >= 2) throw new AppError(429, "Two analyses are already running. Please try again shortly.");
+      let release!: () => void;
+      const reservation = new Promise<void>(resolve => { release = resolve; });
+      active.add(reservation);
+      const executeRetry = async () => {
+        const deadline = AbortSignal.timeout(180000);
+        try {
+          let scrapeData = job.scrape;
+          if (!scrapeData || !scrapeData.pages.length) {
+            await repository.update(id, { status: "crawling", error: undefined });
+            scrapeData = await scrape(job.startUrl, AbortSignal.any([deadline, AbortSignal.timeout(75000)]));
+            await repository.update(id, { scrape: scrapeData, status: "analyzing" });
+          } else {
+            await repository.update(id, { status: "analyzing", error: undefined });
+          }
+          const analysis = await analyze(scrapeData, deadline);
+          await repository.update(id, { status: "completed", analysis, error: undefined });
+        } catch (error) {
+          log.error({ jobId: id, errorType: error instanceof Error ? error.name : "Unknown" }, "Retry analysis job failed");
+          await repository.update(id, { status: "failed", error: error instanceof AppError ? error.message : "Analysis could not finish. Please try again." });
+        }
+      };
+      void executeRetry().catch(() => log.error("Could not persist retry job status"))
+        .finally(() => { active.delete(reservation); release(); });
+      return { id: job._id, status: "analyzing" as const };
+    },
     async close() { stopping = true; await Promise.allSettled([...active]); },
   };
 }

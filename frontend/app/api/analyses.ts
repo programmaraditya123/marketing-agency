@@ -10,3 +10,7 @@ export async function getAnalysis(id: string, signal?: AbortSignal) {
   if (!response.data || !["queued", "crawling", "analyzing", "completed", "failed"].includes(response.data.status)) throw new Error("Invalid analysis response.");
   return response.data;
 }
+export async function retryAnalysis(id: string) {
+  const response = await http1.post<{ success: true; data: { id: string; status: "analyzing" | "completed" } }>(`/analyses/${encodeURIComponent(id)}/retry`, {});
+  return response.data;
+}

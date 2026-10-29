@@ -347,3 +347,43 @@ User requested a new flagship USP feature to analyze both client website and com
 - Backend: 38 passed with 0 failures (npm test --prefix Backend); tsc typecheck passed with 0 errors; tsc build passed.
 - Frontend: ESLint passed with 0 errors; Next.js 16 Turbopack production build (next build) passed with all 12 routes generated. All 7 new frontend components strictly under the 120-line maximum limit.
 - No secrets committed or recorded; no unrequested cloud deployment executed.
+
+
+## AI analysis completion and failure resilience fix
+
+User reported that AI analysis completed and backend responded with 200 OK, but the frontend displayed the error message:
+"AI analysis failed. The scraped data has been saved; please check the microservice configuration." (succeeding in only ~1 out of 50 scenarios).
+
+### Root Causes Identified:
+1. Rigid Evidence Validation: `validate_evidence` in `service/analyses.py` threw `AnalysisError` on any slight discrepancy:
+   - When an LLM output an observed finding without citation URLs (instead of self-healing to `basis: "inferred"`).
+   - When an unknown finding was inconsistently marked (instead of normalizing `value="Unknown"`, `confidence="low"`, `evidenceUrls=[]`).
+   - When URL trailing slashes differed between crawled sources (e.g. `https://kukunotes.com` vs `https://kukunotes.com/`), or anchors were present, falsely marking them as "fabricated" sources outside the crawl.
+2. Unsanitized Gemini Output: `gemini_model.py` passed raw JSON straight to `output.model_validate_json(text)` without any schema sanitization, markdown stripping, or literal normalization.
+3. List Bounds & Missing Fields: `krutrim_sanitizer.py` did not truncate list fields to schema `max_length` (e.g. contentThemes max 12, marketingOpportunities max 10, benefits max 10, products max 15, targetAudience max 8) or supply safe defaults for optional/omitted fields, causing Pydantic `ValidationError`.
+4. Error Masking in Backend: `Backend/config/microservice.ts` only knew about GEMINI_* codes; when Microservice raised `ANALYSIS_FAILED` or `KRUTRIM_*`, Backend fell back to the generic message `"AI analysis failed. The scraped data has been saved; please check the microservice configuration."`, masking the real cause.
+5. Missing AppSail Krutrim Config: `scripts/configure-appsail.cjs` did not propagate `KRUTRIM_API_KEY` to AppSail, causing cloud requests to fall back to Gemini where quota 402 occurred.
+6. Lack of Analysis Retry: When an analysis failed despite scrape data already being safely persisted in MongoDB, neither the backend nor frontend provided a retry action, forcing users to reload or re-enter the URL.
+
+### Fixes & Improvements:
+1. Microservice:
+   - Extracted `model/krutrim_urls.py` (58 lines) and updated `model/krutrim_sanitizer.py` (115 lines) to strictly observe the <120 line guideline.
+   - Enhanced `filter_urls` to normalize trailing slashes, strip URL anchors, and map internal same-domain links to canonical crawled pages.
+   - Added list length slicing via `get_max_length` and fallback defaults for omitted fields in `sanitize_payload`.
+   - Updated `generate_with_gemini` to sanitize output with `sanitize_payload` before Pydantic validation.
+   - Updated `validate_evidence` in `service/analyses.py` to self-heal observed findings without URLs to `basis="inferred"` and normalize unknown findings, while preserving rejection of uncrawled foreign domains.
+2. Backend:
+   - Expanded `ANALYSIS_ERRORS` in `Backend/config/microservice.ts` to map `ANALYSIS_FAILED`, `KRUTRIM_*`, and HTTP 402 quota errors to actionable, user-friendly messages.
+   - Added `POST /api/v1/analyses/:id/retry` in `crawler.helper.ts`, `crawler.controller.ts`, and `crawlers.route.ts` allowing immediate AI re-analysis using persisted scrape data without re-crawling.
+3. Frontend:
+   - Updated `frontend/app/api/analyses.ts` and `frontend/app/hooks/useAnalysis.ts` to expose `retryAnalysis` and `retry()`.
+   - Updated `frontend/app/components/AnalysisProgress.tsx` to display a 1-click `🔄 Retry Analysis` button with loading feedback whenever an analysis has failed.
+   - Updated `Workspace.tsx` to pass `onRetry` and `busy` state to `AnalysisProgress`.
+4. AppSail Configuration:
+   - Updated `scripts/configure-appsail.cjs` to include `KRUTRIM_API_KEY`, `KRUTRIM_MODEL`, and `KRUTRIM_BASE_URL` in the AppSail environment configuration.
+
+### Verification:
+- Microservice: All 64 pytest tests passed (pytest Microservice/tests).
+- Backend: All 38 automated tests passed (npm test --prefix Backend); TypeScript build passed (tsc).
+- Frontend: Next.js 16 Turbopack production build passed (next build); all 12 routes generated cleanly.
+- Live 8-page crawl verification: Tested with real KukuNotes 8-page crawl data; Krutrim AI successfully generated full structured analysis with 0 errors.

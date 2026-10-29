@@ -7,7 +7,7 @@ from pydantic import BaseModel, ValidationError
 
 from config.settings import Settings
 from model.gemini_schema import generation_schema
-from model.krutrim_sanitizer import extract_json_payload, sanitize_payload
+from model.krutrim_sanitizer import extract_allowed_sources, extract_json_payload, sanitize_payload
 from utils.exceptions import AnalysisError
 
 logger = logging.getLogger(__name__)
@@ -24,13 +24,6 @@ def clean_json_markdown(text: str) -> str:
             lines = lines[:-1]
         cleaned = "\n".join(lines).strip()
     return cleaned
-
-
-def _extract_allowed_sources(payload: BaseModel) -> set[str] | None:
-    pages = getattr(payload, "pages", None)
-    if isinstance(pages, list):
-        return {str(getattr(p, "url", p.get("url") if isinstance(p, dict) else "")) for p in pages if p}
-    return None
 
 
 async def generate_with_krutrim(
@@ -79,7 +72,7 @@ async def generate_with_krutrim(
             raise AnalysisError("Krutrim returned empty content.", 502, "KRUTRIM_EMPTY_RESPONSE")
 
         raw_parsed = extract_json_payload(content)
-        allowed = _extract_allowed_sources(payload)
+        allowed = extract_allowed_sources(payload)
         sanitized = sanitize_payload(raw_parsed, output, allowed_sources=allowed)
         return output.model_validate(sanitized)
 

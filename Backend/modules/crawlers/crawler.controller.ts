@@ -13,5 +13,9 @@ export function crawlControllers(service: CrawlService, workspace?: WorkspaceSer
       reply.header("Cache-Control", "no-store");
       return { success: true, data: await service.get(request.params.id, request.identity?.ownerId) };
     },
+    async retry(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+      const data = await service.retry(request.params.id, request.identity?.ownerId);
+      return reply.code(202).send({ success: true, data });
+    },
   };
 }

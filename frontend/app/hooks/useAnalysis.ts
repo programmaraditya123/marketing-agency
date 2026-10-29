@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { createAnalysis, getAnalysis } from "../api/analyses";
+import { createAnalysis, getAnalysis, retryAnalysis } from "../api/analyses";
 import type { AnalysisJob } from "@/types/analysis";
 import type { BrandBrief } from "../analyze/api/workspace";
 export function useAnalysis(initialId?: string) {
@@ -49,6 +49,16 @@ export function useAnalysis(initialId?: string) {
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not start analysis."); return null; }
     finally { setSubmitting(false); }
   }, []);
+  const retry = useCallback(async () => {
+    if (!job?.id) return;
+    setError(""); setSubmitting(true);
+    try {
+      const res = await retryAnalysis(job.id);
+      setJob(prev => prev ? { ...prev, status: res.status || "analyzing", error: undefined } : null);
+    } catch {
+      if (job.startUrl) await submit(job.startUrl);
+    } finally { setSubmitting(false); }
+  }, [job?.id, job?.startUrl, submit]);
   function updateBrief(brief: BrandBrief) { setJob(previous => previous ? { ...previous, brief } : previous); }
-  return { job, error, submit, loading, updateBrief, busy: submitting || polling || (!!job && !terminal && !error) };
+  return { job, error, submit, retry, loading, updateBrief, busy: submitting || polling || (!!job && !terminal && !error) };
 }

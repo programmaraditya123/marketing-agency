@@ -12,6 +12,7 @@ export function createAnalyzer(env: Environment) {
       const code = body && typeof body === "object" && "code" in body ? body.code : undefined;
       const message = typeof code === "string" ? ANALYSIS_ERRORS[code] : undefined;
       throw new AppError(502, message || (response.status === 401 ? "Microservice authentication failed. Check that MICROSERVICE_TOKEN matches in both services."
+        : response.status === 402 ? "AI service quota or payment limit reached. Please check the API configuration."
         : response.status === 429 ? "Gemini quota or rate limit reached. Try again later."
         : "AI analysis failed. The scraped data has been saved; please check the microservice configuration."));
     }
@@ -33,4 +34,11 @@ const ANALYSIS_ERRORS: Record<string, string> = {
   GEMINI_OUTPUT_LIMIT: "Gemini reached its output limit before completing the report.",
   GEMINI_BLOCKED: "Gemini could not complete a safe analysis of this website.",
   GEMINI_INVALID_OUTPUT: "Gemini returned an invalid structured report. Please try again.",
+  ANALYSIS_FAILED: "AI analysis could not complete structured report verification. Please try again.",
+  KRUTRIM_HTTP_ERROR: "AI service provider returned an error. Please try again.",
+  KRUTRIM_NO_CHOICES: "AI service returned an empty response. Please try again.",
+  KRUTRIM_EMPTY_RESPONSE: "AI service returned empty content. Please try again.",
+  KRUTRIM_INVALID_OUTPUT: "AI service returned an invalid report. Please try again.",
+  KRUTRIM_TIMEOUT: "AI service request timed out. Please try again.",
+  KRUTRIM_CONNECTION_FAILED: "Cannot connect to AI service. Please try again.",
 };

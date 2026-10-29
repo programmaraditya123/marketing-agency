@@ -9,6 +9,7 @@ from config.settings import Settings
 from model.gemini_errors import check_provider_response
 from model.gemini_schema import generation_schema
 from model.krutrim_model import generate_with_krutrim
+from model.krutrim_sanitizer import extract_allowed_sources, extract_json_payload, sanitize_payload
 from prompts.website_analysis import SYSTEM_PROMPT
 from schemas.analysis import Analysis
 from schemas.analysis_input import AnalysisInput
@@ -53,7 +54,13 @@ async def generate_with_gemini(
         if candidate.get("finishReason") != "STOP":
             raise AnalysisError("Gemini could not complete a safe, structured analysis.", 502, "GEMINI_BLOCKED")
         text = "".join(part.get("text", "") for part in candidate.get("content", {}).get("parts", []) if not part.get("thought"))
-        return output.model_validate_json(text)
+        try:
+            raw_parsed = extract_json_payload(text)
+            allowed = extract_allowed_sources(payload)
+            sanitized = sanitize_payload(raw_parsed, output, allowed_sources=allowed)
+            return output.model_validate(sanitized)
+        except Exception:
+            return output.model_validate_json(text)
     except httpx.TimeoutException as error:
         raise AnalysisError("Gemini analysis timed out. Please try again or select a faster model.", 504, "GEMINI_TIMEOUT") from error
     except httpx.HTTPError as error:

@@ -12,4 +12,6 @@ export default async function crawlerRoutes(app: FastifyInstance, options: { ser
   app.post("/crawlwebsite", { schema, config: { rateLimit: { max: 5, timeWindow: "1 minute" } } }, controller.create);
   app.get("/analyses/:id", { schema: { response: { 200: jobResponse }, params: { type: "object", required: ["id"],
     properties: { id: { type: "string", pattern: "^[a-f0-9]{64}$" } } } } }, controller.get);
+  app.post("/analyses/:id/retry", { schema: { response: { 202: createResponse }, params: { type: "object", required: ["id"],
+    properties: { id: { type: "string", pattern: "^[a-f0-9]{64}$" } } } } }, controller.retry);
 }

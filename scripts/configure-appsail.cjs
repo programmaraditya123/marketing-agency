@@ -36,7 +36,8 @@ async function main() {
   const microUrl = new URL(micro.url);
   if (microUrl.protocol !== 'https:' || ['localhost', '127.0.0.1'].includes(microUrl.hostname)) throw new Error('A deployed HTTPS Microservice URL is required.');
   const nextMicro = { ...(micro.configuration?.environment?.variables || {}), GEMINI_API_KEY: microEnv.GEMINI_API_KEY,
-    GEMINI_MODEL: microEnv.GEMINI_MODEL || 'gemini-2.5-flash', MICROSERVICE_TOKEN: microEnv.MICROSERVICE_TOKEN };
+    GEMINI_MODEL: microEnv.GEMINI_MODEL || 'gemini-2.5-flash', MICROSERVICE_TOKEN: microEnv.MICROSERVICE_TOKEN,
+    ...(microEnv.KRUTRIM_API_KEY ? { KRUTRIM_API_KEY: microEnv.KRUTRIM_API_KEY, KRUTRIM_MODEL: microEnv.KRUTRIM_MODEL || 'gpt-oss-120b', KRUTRIM_BASE_URL: microEnv.KRUTRIM_BASE_URL || 'https://cloud.olakrutrim.com/v1' } : {}) };
   const nextBackend = { ...(backend.configuration?.environment?.variables || {}), MONGODB_URI: backendEnv.MONGODB_URI,
     MONGODB_DATABASE: backendEnv.MONGODB_DATABASE || 'marketing_agency', JWT_SECRET: backendEnv.JWT_SECRET,
     MICROSERVICE_TOKEN: backendEnv.MICROSERVICE_TOKEN, MICROSERVICE_URL: microUrl.origin,

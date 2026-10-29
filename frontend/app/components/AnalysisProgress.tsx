@@ -1,6 +1,6 @@
 import type { AnalysisJob } from "@/types/analysis";
 
-export default function AnalysisProgress({ job }: { job: AnalysisJob }) {
+export default function AnalysisProgress({ job, onRetry, busy }: { job: AnalysisJob; onRetry?: () => void; busy?: boolean }) {
   const stages = ["queued", "crawling", "analyzing", "completed"];
   const current = stages.indexOf(job.status);
   const labels: Record<string, string> = {
@@ -14,7 +14,7 @@ export default function AnalysisProgress({ job }: { job: AnalysisJob }) {
   const steps = [
     { name: "Target Received", desc: "URL sanitized" },
     { name: "Crawl Evidence", desc: "Extracting pages & links" },
-    { name: "Gemini Analysis", desc: "Audience & positioning" },
+    { name: "AI Analysis", desc: "Audience & positioning" },
     { name: "Report Synthesis", desc: "Ready to inspect" },
   ];
 
@@ -43,8 +43,22 @@ export default function AnalysisProgress({ job }: { job: AnalysisJob }) {
 
       {job.status === "failed" ? (
         <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-700">
-          <p className="font-semibold">Analysis Failed:</p>
-          <p className="mt-1">{job.error || "The website could not be crawled. Check if it is accessible publicly."}</p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="font-semibold text-red-800">Analysis Failed:</p>
+              <p className="mt-1 text-slate-700">{job.error || "The website could not be crawled. Check if it is accessible publicly."}</p>
+            </div>
+            {onRetry && (
+              <button
+                type="button"
+                onClick={onRetry}
+                disabled={busy}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-violet-700 disabled:opacity-50 transition cursor-pointer"
+              >
+                <span>{busy ? "Retrying…" : "🔄 Retry Analysis"}</span>
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <ol className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">

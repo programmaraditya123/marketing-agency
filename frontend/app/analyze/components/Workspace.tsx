@@ -21,7 +21,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 export default function Workspace({ initialId, initialWebsite, initialSection }: { initialId?: string; initialWebsite?: string; initialSection?: string }) {
   const router = useRouter();
   const { user } = useAuth();
-  const { job, error, submit, loading, busy, updateBrief } = useAnalysis(initialId);
+  const { job, error, submit, retry, loading, busy, updateBrief } = useAnalysis(initialId);
   const [active, setActive] = useState(initialSection || "Brand Overview");
   const [website, setWebsite] = useState(initialWebsite || "");
   const [targetCompetitor, setTargetCompetitor] = useState("");
@@ -63,7 +63,7 @@ export default function Workspace({ initialId, initialWebsite, initialSection }:
           </Link>
         )}
         {loading && <p role="status" className="mb-5 animate-pulse text-xs font-medium text-violet-700">Loading saved research report…</p>}
-        {job && job.status !== "completed" && <AnalysisProgress job={job} />}
+        {job && job.status !== "completed" && <AnalysisProgress job={job} onRetry={retry} busy={busy} />}
 
         {active === "Search History" || active === "Your Activity" ? <HistoryPanel key={`${active}:${user?.id || "guest"}`} activity={active === "Your Activity"} />
           : active === "Past Steps" || active === "Future Plans" ? <BriefEditor key={job?.id || "empty"} job={job} focus={active} onSaved={updateBrief} />
