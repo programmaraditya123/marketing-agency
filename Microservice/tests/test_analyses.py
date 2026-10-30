@@ -111,3 +111,17 @@ def test_model_specific_generation_config(client, model):
         return httpx.Response(200, json={"candidates": [{"finishReason": "STOP", "content": {"parts": [{"text": json.dumps(RESULT)}]}}]})
     app.state.http_client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     assert client.post("/api/v1/analyses", headers={"X-Service-Token": TOKEN}, json=PAYLOAD).status_code == 200
+
+
+def test_async_analysis_flow(client):
+    app.state.http_client = provider(RESULT)
+    res = client.post("/api/v1/analyses/async", headers={"X-Service-Token": TOKEN}, json=PAYLOAD)
+    assert res.status_code == 202
+    job_id = res.json()["jobId"]
+    assert job_id
+
+    # Poll job status
+    poll_res = client.get(f"/api/v1/analyses/jobs/{job_id}", headers={"X-Service-Token": TOKEN})
+    assert poll_res.status_code == 200
+    assert poll_res.json()["status"] in ["processing", "completed"]
+

@@ -39,7 +39,22 @@ def validate_evidence(analysis: Analysis, payload: AnalysisInput) -> None:
     inspect(analysis)
 
 
+def _optimize_for_ai(payload: AnalysisInput) -> AnalysisInput:
+    optimized_pages = []
+    for page in payload.pages:
+        page_dict = page.model_dump()
+        if len(page_dict.get("mainText", "")) > 3000:
+            page_dict["mainText"] = page_dict["mainText"][:3000]
+        if len(page_dict.get("headings", [])) > 15:
+            page_dict["headings"] = page_dict["headings"][:15]
+        optimized_pages.append(page_dict)
+    data = payload.model_dump()
+    data["pages"] = optimized_pages
+    return AnalysisInput.model_validate(data)
+
+
 async def analyze_website(payload: AnalysisInput, client: httpx.AsyncClient, settings: Settings) -> Analysis:
-    result = await analyze_with_gemini(payload, client, settings)
+    ai_input = _optimize_for_ai(payload)
+    result = await analyze_with_gemini(ai_input, client, settings)
     validate_evidence(result, payload)
     return result

@@ -1,54 +1,70 @@
-import Link from "next/link";
-
-const capabilities = [
-  { title: "Understand the brand", description: "Identify company offerings, value proposition, positioning, and brand voice from crawled evidence.", live: true, symbol: "◎", path: "/analyze" },
-  { title: "Find the target audience", description: "Explore audience segments, acute pain points, core desires, and psychological buying triggers.", live: true, symbol: "↗", path: "/analyze" },
-  { title: "Discover competitors", description: "AI competitor discovery with domain links, alternative positioning, and 1-click audit.", live: true, symbol: "⇄", path: "/analyze" },
-  { title: "Analyze market demand", description: "Track real-world Google search momentum, seasonal spikes, and regional demand patterns.", live: true, symbol: "⌁", path: "/analyze" },
-  { title: "Budget & channel plan", description: "Model daily & monthly budgets across highest-ROI marketing channels with 30-day cap arithmetic.", live: true, symbol: "▤", path: "/analyze" },
-  { title: "SEO & Keyword War Room", description: "Compare metadata & keywords against competitors to see why you lack organic reach, and get ready-to-deploy ranking tags.", live: true, symbol: "⌖", path: "/analyze" },
-];
+"use client";
+import { useEffect, useRef, useState } from "react";
+import { CAPABILITIES } from "./capabilities/capabilitiesData";
+import CapabilityCard from "./capabilities/CapabilityCard";
 
 export default function OrbitCapabilities() {
+  const [assembled, setAssembled] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setAssembled(true);
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section id="products" aria-labelledby="capabilities-title" className="scroll-mt-6 py-14 sm:py-20">
-      <div className="mb-9 max-w-2xl">
-        <p className="text-xs font-bold tracking-[.2em] text-violet-700 uppercase">Strategic Capabilities</p>
-        <h2 id="capabilities-title" className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-          From website crawl to full campaign roadmap.
-        </h2>
-        <p className="mt-3 text-sm leading-relaxed text-slate-600">
-          Orbit replaces fragmented marketing guesswork with unified, evidence-linked brand intelligence.
-        </p>
+    <section
+      ref={sectionRef}
+      id="products"
+      aria-labelledby="capabilities-title"
+      className="scroll-mt-6 py-12 sm:py-16 overflow-hidden"
+    >
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div className="max-w-2xl">
+          <h2
+            id="capabilities-title"
+            className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight"
+          >
+            From website crawl to full campaign roadmap.
+          </h2>
+          <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-slate-600">
+            Orbit replaces fragmented marketing guesswork with unified, evidence-linked brand intelligence.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setAssembled(false);
+            setTimeout(() => setAssembled(true), 150);
+          }}
+          className="self-start sm:self-auto inline-flex items-center gap-1.5 rounded-full border border-violet-400/30 bg-violet-500/10 px-3.5 py-1 text-[11px] font-semibold text-violet-700 transition hover:bg-violet-500/20"
+        >
+          <span>✨</span>
+          <span>Re-assemble Cards</span>
+        </button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {capabilities.map((item, index) => (
-          <article key={item.title} id={index === 5 ? "orbit-studio" : undefined} className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-6 shadow-2xs transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md">
-            <div>
-              <div className="mb-5 flex items-center justify-between">
-                <span aria-hidden="true" className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-xl text-violet-700">
-                  {item.symbol}
-                </span>
-                <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${item.live ? "bg-cyan-50 text-cyan-900 border border-cyan-100" : "bg-slate-100 text-slate-500"}`}>
-                  {item.live ? "Available Now" : "Coming Soon"}
-                </span>
-              </div>
-              <p className="text-[10px] font-bold text-slate-400">0{index + 1}</p>
-              <h3 className="mt-1 text-base font-bold text-slate-900 group-hover:text-violet-700">{item.title}</h3>
-              <p className="mt-2 text-xs leading-relaxed text-slate-500">{item.description}</p>
-            </div>
-
-            <div className="mt-5 border-t border-slate-100 pt-3">
-              {item.live ? (
-                <Link href={item.path} className="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-600 hover:underline">
-                  Launch in workspace <span>→</span>
-                </Link>
-              ) : (
-                <span className="text-xs text-slate-400">In active development</span>
-              )}
-            </div>
-          </article>
+      <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {CAPABILITIES.map((item, index) => (
+          <CapabilityCard
+            key={item.id}
+            item={item}
+            index={index}
+            assembled={assembled}
+          />
         ))}
       </div>
     </section>
